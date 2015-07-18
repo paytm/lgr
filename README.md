@@ -1,0 +1,2 @@
+# lgr
+Generic Logger
