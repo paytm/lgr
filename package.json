@@ -25,7 +25,7 @@
   "homepage": "https://github.com/paytm/lgr",
   "dependencies": {
     "npmlog": "~1.2.1",
-    "slack-client": "~1.4.1",
-    "lodash": "~3.10.0"
+    "lodash": "~3.10.0",
+    "moment": "~2.10.3"
   }
 }

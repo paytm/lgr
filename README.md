@@ -21,6 +21,9 @@ log.info('gateway', 'Check', null)
 
 ## ToDo and improvements
 
+- Add a starting timestamp when logger was initiated. Gives 2 timestamps , one global and another the starting timestamp of the process.
+- Somehow accept log as type of log level . Currently throws error. should gracefully go to info
+- Should be able to add timestamp in a generic manner , currently adding in info , verbose and error . Should have an option for that
 - Should have support for identifying CALLing Function/ line number
 - Should have support for Prefixing Filename/ function name, line number automatically
 - Should have support for Profiling information also like PID, Process Memory.
