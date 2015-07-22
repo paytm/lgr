@@ -47,5 +47,9 @@ Object.keys(NPMLOG.levels).forEach(function(k){
     };
 });
 
+LGR.prototype.log = function(){
+    arguments[0] = MOMENT().format("YYYY-MM-DD HH:MM:SS.sss") + ' ' + arguments[0];
+    return this.NPMLOG['info'].apply(this, arguments);
+};
 
 module.exports = new LGR();
