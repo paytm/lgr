@@ -3,6 +3,8 @@
 
 var
 
+    UTIL                = require('util'),
+
     /* NPM Third Party */
     _                   = require('lodash'),
     NPMLOG              = require('npmlog'),
@@ -12,15 +14,15 @@ var
     
     /* Project Files */
 
-/*
-
-    Change the Default stream to STDOUT instead of STDERR
-
-    SA : I have no idea why this was STDOUT to begin with?
-*/
-
-function LGR() {
+function LGR(opts) {
     this.NPMLOG = NPMLOG;
+
+    /*
+        Log format
+        "ram" , "ts" "uptime" "pid"
+
+    */
+    this.setLogFormat('<%= ts %> [<%= uptime %>] ');
 
     /*
         npmlog emits log and log.<lvl> event after that
@@ -42,14 +44,29 @@ function LGR() {
 // Override ALL LEVELS ... to have timestamp
 Object.keys(NPMLOG.levels).forEach(function(k){
     LGR.prototype[k] = function(){
-        arguments[0] = MOMENT().format("YYYY-MM-DD HH:MM:SS.sss") + ' ' + arguments[0];
+        arguments[0] = this._p() + arguments[0];
         return this.NPMLOG[k].apply(this, arguments);
     };
 });
 
 LGR.prototype.log = function(){
-    arguments[0] = MOMENT().format("YYYY-MM-DD HH:MM:SS.sss") + ' ' + arguments[0];
+    arguments[0] = this._p() + arguments[0];
     return this.NPMLOG['info'].apply(this, arguments);
+};
+
+/* Sets log format for a user */
+LGR.prototype.setLogFormat = function(val){
+    this.logFormat =  _.template(val);
+};
+
+/* returns log prefix */
+LGR.prototype._p = function(){
+    return this.logFormat({
+        "ram"       :  JSON.stringify(process.memoryUsage()),
+        "ts"        :  MOMENT().format("YYYY-MM-DD HH:MM:SS.sss"),
+        "uptime"    : process.uptime(),
+        "pid"       : process.pid,
+    });
 };
 
 module.exports = new LGR();

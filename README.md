@@ -15,6 +15,16 @@ Eactly like npmlog , but giving a snippet here
 log.info('gateway', 'Check', null)
 ```
 
+You can set log format
+
+```
+// possible options are "ram" , "ts" "uptime" "pid"
+log.setLogFormat('<%= ts %> [<%= uptime %>] ');
+
+```
+
+
+
 ## Features
 - All of npmlog as of now
 
@@ -43,4 +53,9 @@ log.info('gateway', 'Check', null)
 ## ChangeLog
 0.0.1 
 ``` Init ```
+
+0.0.3
+```
+Add template based logformat supporting ram, pid, ts and uptime
+```
 
