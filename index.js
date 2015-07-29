@@ -18,11 +18,16 @@ function LGR(opts) {
     this.NPMLOG = NPMLOG;
 
     /*
+        maintain internal count
+    */
+    this.count = 0;
+
+    /*
         Log format
         "ram" , "ts" "uptime" "pid"
 
     */
-    this.setLogFormat('<%= ts %> [<%= uptime %>] ');
+    this.setLogFormat('<%= ts %> [<%= uptime %>] [<%= count %>] ');
 
     /*
         npmlog emits log and log.<lvl> event after that
@@ -31,13 +36,16 @@ function LGR(opts) {
 
     */
     NPMLOG.on('log', function(obj){
+        this.count++;
         NPMLOG.stream = process.stdout;
     }.bind(this));
 
     NPMLOG.on('log.error', function(obj){
+        this.count++;
         NPMLOG.stream = process.stderr;
         /* STDOUT will not get a copy of this erro rmessage */
     }.bind(this));
+
 
 }
 
@@ -63,9 +71,10 @@ LGR.prototype.setLogFormat = function(val){
 LGR.prototype._p = function(){
     return this.logFormat({
         "ram"       :  JSON.stringify(process.memoryUsage()),
-        "ts"        :  MOMENT().format("YYYY-MM-DD HH:MM:SS.sss"),
+        "ts"        :  MOMENT().format("YYYY-MM-DD HH:MM:SS"),
         "uptime"    : process.uptime(),
         "pid"       : process.pid,
+        "count"     : this.count,
     });
 };
 

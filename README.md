@@ -18,7 +18,7 @@ log.info('gateway', 'Check', null)
 You can set log format
 
 ```
-// possible options are "ram" , "ts" "uptime" "pid"
+// possible options are "ram" , "ts" "uptime" "pid", "count"
 log.setLogFormat('<%= ts %> [<%= uptime %>] ');
 
 ```
