@@ -41,7 +41,6 @@ function LGR(opts) {
     }.bind(this));
 
     NPMLOG.on('log.error', function(obj){
-        this.count++;
         NPMLOG.stream = process.stderr;
         /* STDOUT will not get a copy of this erro rmessage */
     }.bind(this));
@@ -76,6 +75,11 @@ LGR.prototype._p = function(){
         "pid"       : process.pid,
         "count"     : this.count,
     });
+};
+
+LGR.prototype.setLevel = function(level){
+    this.level = level;
+    this.NPMLOG.level = level;
 };
 
 module.exports = new LGR();

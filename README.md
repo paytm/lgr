@@ -23,6 +23,10 @@ log.setLogFormat('<%= ts %> [<%= uptime %>] ');
 
 ```
 
+You can set Log level
+```
+log.setLevel('verbose');
+```
 
 
 ## Features
