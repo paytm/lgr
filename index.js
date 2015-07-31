@@ -1,4 +1,4 @@
-/*jshint multistr: true ,node: true*/
+ /*jshint multistr: true ,node: true*/
 "use strict";
 
 var
@@ -34,19 +34,19 @@ function LGR(opts) {
         Hence we put a hook in both the events and change the stream before the log is written
         Since events are sync, this sohuld not be a problem
 
+        Will not increment count here because of the Reason stated above.
+
     */
-    NPMLOG.on('log', function(obj){
+
+    NPMLOG.on('log', function(obj) {
         this.count++;
         NPMLOG.stream = process.stdout;
     }.bind(this));
 
-    NPMLOG.on('log.error', function(obj){
-        this.count++;
-        NPMLOG.stream = process.stderr;
+    NPMLOG.on('log.error', function(obj) {
+          NPMLOG.stream = process.stderr;
         /* STDOUT will not get a copy of this erro rmessage */
     }.bind(this));
-
-
 }
 
 // Override ALL LEVELS ... to have timestamp
