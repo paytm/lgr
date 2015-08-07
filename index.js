@@ -70,7 +70,7 @@ LGR.prototype.setLogFormat = function(val){
 LGR.prototype._p = function(){
     return this.logFormat({
         "ram"       :  JSON.stringify(process.memoryUsage()),
-        "ts"        :  MOMENT().format("YYYY-MM-DD HH:MM:ss"),
+        "ts"        :  MOMENT().format("YYYY-MM-DD HH:mm:ss"),
         "uptime"    : process.uptime(),
         "pid"       : process.pid,
         "count"     : this.count,
