@@ -3,6 +3,7 @@
 
 var
 
+    FS                  = require('fs'),
     UTIL                = require('util'),
 
     /* NPM Third Party */
@@ -30,6 +31,17 @@ function LGR(opts) {
     this.setLogFormat('<%= ts %> [<%= uptime %>] [<%= count %>] ');
 
     /*
+        Default output stream ... default is process.stdout
+        This is changed to file if output has to go to file
+    */
+    this.setOut();
+
+    /*
+        Default Error Stream ... default to process.stderr
+    */
+    this.setErr();
+
+    /*
         npmlog emits log and log.<lvl> event after that
         Hence we put a hook in both the events and change the stream before the log is written
         Since events are sync, this sohuld not be a problem
@@ -37,11 +49,11 @@ function LGR(opts) {
     */
     NPMLOG.on('log', function(obj){
         this.count++;
-        NPMLOG.stream = process.stdout;
+        NPMLOG.stream = this.outputStream;
     }.bind(this));
 
     NPMLOG.on('log.error', function(obj){
-        NPMLOG.stream = process.stderr;
+        NPMLOG.stream = this.errorStream;
         /* STDOUT will not get a copy of this erro rmessage */
     }.bind(this));
 
@@ -81,5 +93,18 @@ LGR.prototype.setLevel = function(level){
     this.level = level;
     this.NPMLOG.level = level;
 };
+
+/* To set info to File/Stdout ... stdout by default */
+LGR.prototype.setOut = function(fileName){
+    if(fileName === undefined) this.outputStream = process.stdout;
+    else  this.outputStream = FS.createWriteStream(fileName, { flags: 'a', encoding: null });
+};
+
+/* To set Error to File/stderr */
+LGR.prototype.setErr = function(fileName){
+    if(fileName === undefined) this.errorStream = process.stderr;
+    else this.errorStream = FS.createWriteStream(fileName, { flags: 'a', encoding: null });
+};
+
 
 module.exports = new LGR();
