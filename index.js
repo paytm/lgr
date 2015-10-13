@@ -106,5 +106,14 @@ LGR.prototype.setErr = function(fileName){
     else this.errorStream = FS.createWriteStream(fileName, { flags: 'a', encoding: null });
 };
 
+/* To Flush the buffered files and everything */
+LGR.prototype.flush = function(){
+
+    // Close the output stream if is not process.stdout
+    if(_.get(this.outputStream,'_handle.fd', null) !== 1) this.outputStream.end();
+
+    // Close the err stream if is not process.stdout
+    if(_.get(this.errorStream,'_handle.fd', null) !== 2) this.errorStream.end();
+};
 
 module.exports = new LGR();
