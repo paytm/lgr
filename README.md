@@ -62,11 +62,8 @@ log.setErr()
 - Not Very Important: Probably a http server interface to see logs in case of Debug like http://bluejamesbond.github.io/Scribe.js/
 
 ## ChangeLog
-0.0.1 
-``` Init ```
+See Tags
 
-0.0.3
-```
-Add template based logformat supporting ram, pid, ts and uptime
-```
+## Test
+Just run test.js
 
