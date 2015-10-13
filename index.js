@@ -41,6 +41,12 @@ function LGR(opts) {
     */
     this.setErr();
 
+
+    /*
+      Add custom error level critical, which is used to log critical errors
+   */
+    NPMLOG.addLevel('critical', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'CRITICAL!' );
+
     /*
         npmlog emits log and log.<lvl> event after that
         Hence we put a hook in both the events and change the stream before the log is written
@@ -57,16 +63,22 @@ function LGR(opts) {
         /* STDOUT will not get a copy of this erro rmessage */
     }.bind(this));
 
+    NPMLOG.on('log.critical', function(obj){
+        NPMLOG.stream = this.errorStream;
+        /* STDOUT will not get a copy of this erro rmessage */
+    }.bind(this));
 
-}
 
-// Override ALL LEVELS ... to have timestamp
-Object.keys(NPMLOG.levels).forEach(function(k){
-    LGR.prototype[k] = function(){
+
+    // Override ALL LEVELS ... to have timestamp
+    Object.keys(NPMLOG.levels).forEach(function(k){
+      LGR.prototype[k] = function(){
         arguments[0] = this._p() + arguments[0];
         return this.NPMLOG[k].apply(this, arguments);
-    };
-});
+      };
+    });
+   
+}
 
 LGR.prototype.log = function(){
     arguments[0] = this._p() + arguments[0];
