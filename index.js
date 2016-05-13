@@ -72,12 +72,35 @@ function LGR(opts) {
 
     // Override ALL LEVELS ... to have timestamp
     Object.keys(NPMLOG.levels).forEach(function(k){
-      LGR.prototype[k] = function(){
-        arguments[0] = this._p() + arguments[0];
-        return this.NPMLOG[k].apply(this, arguments);
-      };
+        // Name the anonymous function: Useful later.
+        LGR.prototype[k] = function customLGRLevel (){
+            /*
+               Always nice to have __FUNC__, __FILE__, and __LINE__.
+               Referred from http://stackoverflow.com/questions/11386492/accessing-line-number-in-v8-javascript-chrome-node-js
+               Also read https://github.com/v8/v8/wiki/Stack-Trace-API
+            */
+
+            function captureStack(){
+                // Hijack the Error.prepareStackTrace() function, which can be used to format the captured structuredStack.
+                var orig = Error.prepareStackTrace;
+                Error.prepareStackTrace = function(_, structuredStack){ return structuredStack; };
+                var err = new Error();
+
+                // Naming the anonymous function allows us to skip the top of the stack till customLGRLevel
+                Error.captureStackTrace(err, LGR.customLGRLevel);
+                var stack = err.stack;
+
+                // Don't forget to restore the hijacked function.
+                Error.prepareStackTrace = orig;
+                return stack;
+            }
+
+            this.stack = captureStack();
+
+            arguments[0] = this._p(this.stack[2]) + arguments[0]; // why stack[2]? think.
+            return this.NPMLOG[k].apply(this, arguments);
+        };
     });
-   
 }
 
 LGR.prototype.log = function(){
@@ -91,13 +114,17 @@ LGR.prototype.setLogFormat = function(val){
 };
 
 /* returns log prefix */
-LGR.prototype._p = function(){
+LGR.prototype._p = function(callSiteObj){
     return this.logFormat({
         "ram"       :  JSON.stringify(process.memoryUsage()),
         "ts"        :  MOMENT().format("YYYY-MM-DD HH:mm:ss"),
         "uptime"    : process.uptime(),
         "pid"       : process.pid,
         "count"     : this.count,
+        "__FUNC__"  : callSiteObj.getFunctionName() || '(anon)',
+        "__FILE__"  : callSiteObj.getFileName(),
+        "__LINE__"  : callSiteObj.getLineNumber(),
+        "__COLM__"  : callSiteObj.getColumnNumber(),
     });
 };
 
