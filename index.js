@@ -68,43 +68,40 @@ function LGR(opts) {
         /* STDOUT will not get a copy of this erro rmessage */
     }.bind(this));
 
+    /*
+       Always nice to have __FUNC__, __FILE__, and __LINE__.
+       Referred from http://stackoverflow.com/questions/11386492/accessing-line-number-in-v8-javascript-chrome-node-js
+       Also read https://github.com/v8/v8/wiki/Stack-Trace-API
+    */
+
+    this.captureStack = function (){
+        // Hijack the Error.prepareStackTrace() function, which can be used to format the captured structuredStack.
+        var orig = Error.prepareStackTrace;
+        Error.prepareStackTrace = function(_, structuredStack){ return structuredStack; };
+        var err = new Error();
+
+        // Naming the anonymous function allows us to skip the top of the stack till customLGRLevel
+        Error.captureStackTrace(err, LGR.customLGRLevel);
+        var stack = err.stack;
+
+        // Don't forget to restore the hijacked function.
+        Error.prepareStackTrace = orig;
+        return stack;
+    }
 
 
     // Override ALL LEVELS ... to have timestamp
     Object.keys(NPMLOG.levels).forEach(function(k){
-        // Name the anonymous function: Useful later.
+        // Name the anonymous function: Useful for capturing stack.
         LGR.prototype[k] = function customLGRLevel (){
-            /*
-               Always nice to have __FUNC__, __FILE__, and __LINE__.
-               Referred from http://stackoverflow.com/questions/11386492/accessing-line-number-in-v8-javascript-chrome-node-js
-               Also read https://github.com/v8/v8/wiki/Stack-Trace-API
-            */
-
-            function captureStack(){
-                // Hijack the Error.prepareStackTrace() function, which can be used to format the captured structuredStack.
-                var orig = Error.prepareStackTrace;
-                Error.prepareStackTrace = function(_, structuredStack){ return structuredStack; };
-                var err = new Error();
-
-                // Naming the anonymous function allows us to skip the top of the stack till customLGRLevel
-                Error.captureStackTrace(err, LGR.customLGRLevel);
-                var stack = err.stack;
-
-                // Don't forget to restore the hijacked function.
-                Error.prepareStackTrace = orig;
-                return stack;
-            }
-
-            this.stack = captureStack();
-
-            arguments[0] = this._p(this.stack[2]) + arguments[0]; // why stack[2]? think.
+            arguments[0] = this._p(this.captureStack()[2]) + arguments[0]; // why stack[2]? think.
             return this.NPMLOG[k].apply(this, arguments);
         };
     });
 }
 
 LGR.prototype.log = function(){
-    arguments[0] = this._p() + arguments[0];
+    arguments[0] = this._p(this.captureStack()[2]) + arguments[0];
     return this.NPMLOG['info'].apply(this, arguments);
 };
 
