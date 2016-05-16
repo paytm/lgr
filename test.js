@@ -63,3 +63,6 @@ LOG.info('TEST in file', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 
 
 LOG.setErr(PATH.join(__dirname, 'testerror.log'));
 LOG.error('TEST in file', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
+
+var a = null;
+a.length;
