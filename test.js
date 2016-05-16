@@ -3,7 +3,6 @@
 
 var
     _                   = require("lodash"),
-    should              = require("should"),
     PATH                = require('path'),
     LOG                 = require('./index.js');
 
@@ -29,6 +28,17 @@ LOG.info('TEST', 'LEVEL', LOG.getLevel());
 LOG.setErr();
 LOG.error('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
 
+LOG.setLogFormat('In: <%= __FUNC__ %>() At: <%= __FILE__ %>:<%= __LINE__ %>: ');
+function testFunction () {
+    LOG.info('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
+    LOG.error('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
+}
+
+testFunction();
+
+LOG.info('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
+LOG.error('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
+
 LOG.level = 'silly';
 LOG.silly('SILL', "Yaara silly silly");
 LOG.info('SILL', 'LEVEL', LOG.getLevel());
@@ -43,4 +53,3 @@ LOG.info('TEST in file', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 
 
 LOG.setErr(PATH.join(__dirname, 'testerror.log'));
 LOG.error('TEST in file', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
-

@@ -20,9 +20,9 @@ log.info('gateway', 'Check', null)
 You can set log format
 
 ```
-// possible options are "ram" , "ts" "uptime" "pid", "count"
+// possible options are "ram" , "ts" "uptime" "pid", "count",
+// and "__FUNC__", "__FILE__", "__LINE__", "__COLM__". C Forever. :D
 log.setLogFormat('<%= ts %> [<%= uptime %>] ');
-
 ```
 
 You can set Log level
@@ -63,7 +63,6 @@ log.setErr('/path/of/file/to/write/Error/messages')
 
 // to redirect back to STDERR
 log.setErr()
-
 ```
 
 ## Features
