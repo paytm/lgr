@@ -7,33 +7,13 @@ var
     PATH                = require('path'),
     LOG                 = require('./index.js');
 
-before(function (done) {
-});
 
+/*
 
-// describe("State Change Test Suite", function () {
-//     it ("Should give me a transition id ", function (done) {
-//         stateLib.getTransition(function (error, transition_id) {
+    Currently there are no mocha type Test cases since most of these tests should work if are not crashing
+    And since Travis and manually running these cases can detect crash , do this works.
 
-//             should.not.exist(error);
-//             should(transition_id).be.exactly('12');
-//             done();
-
-//         }, "merchant", 100000, 8);
-//     });
-
-//     it ("Should not give me a transition id ", function (done) {
-//         stateLib.getTransition(function (error, transition_id) {
-
-//             should.not.exist(error);
-//             should(transition_id).be.exactly(null);
-
-//             done();
-//         }, "merchant", 100000, 6000);
-//     });
-
-//     // Sushant : Add a test for invalid TRANSACTION ID
-// });
+*/
 
 LOG.level = 'verbose';                      // Not to be confused, doesn't set the level. See the silly logs below.
 LOG.info('TEST', 'LEVEL', LOG.getLevel());
@@ -64,5 +44,3 @@ LOG.info('TEST in file', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 
 LOG.setErr(PATH.join(__dirname, 'testerror.log'));
 LOG.error('TEST in file', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
 
-var a = null;
-a.length;
