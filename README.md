@@ -28,6 +28,28 @@ You can set Log level
 log.setLevel('verbose');
 ```
 
+You can get the current level
+```
+log.getLevel();
+// -> now returns 'verbose'
+```
+
+You can query the levels you can `setLevel` to
+```
+log.getLevels();
+/*
+Returns:
+{ silly: -Infinity,
+  verbose: 1000,
+  info: 2000,
+  http: 3000,
+  warn: 4000,
+  error: 5000,
+  silent: Infinity,
+  critical: 6000 }
+*/
+```
+
 You can Redirect outout / error to log files
 ```
 log.setOut('/path/of/file/to/write/info/messages')
