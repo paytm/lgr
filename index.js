@@ -130,6 +130,14 @@ LGR.prototype.setLevel = function(level){
     this.NPMLOG.level = level;
 };
 
+LGR.prototype.getLevel = function() {
+    return this.NPMLOG.level;
+};
+
+LGR.prototype.getLevels = function() {
+    return this.NPMLOG.levels;
+};
+
 /* To set info to File/Stdout ... stdout by default */
 LGR.prototype.setOut = function(fileName){
     if(fileName === undefined) this.outputStream = process.stdout;
