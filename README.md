@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/paytm/lgr.svg?branch=master)](https://travis-ci.org/paytm/lgr)
+
 # lgr
 Generic Logger
 
