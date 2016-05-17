@@ -68,33 +68,11 @@ function LGR(opts) {
         /* STDOUT will not get a copy of this erro rmessage */
     }.bind(this));
 
-    /*
-       Always nice to have __FUNC__, __FILE__, and __LINE__.
-       Referred from http://stackoverflow.com/questions/11386492/accessing-line-number-in-v8-javascript-chrome-node-js
-       Also read https://github.com/v8/v8/wiki/Stack-Trace-API
-    */
-
-    this.captureStack = function (){
-        // Hijack the Error.prepareStackTrace() function, which can be used to format the captured structuredStack.
-        var orig = Error.prepareStackTrace;
-        Error.prepareStackTrace = function(_, structuredStack){ return structuredStack; };
-        var err = new Error();
-
-        // Naming the anonymous function allows us to skip the top of the stack till customLGRLevel
-        Error.captureStackTrace(err, LGR.customLGRLevel);
-        var stack = err.stack;
-
-        // Don't forget to restore the hijacked function.
-        Error.prepareStackTrace = orig;
-        return stack;
-    }
-
-
     // Override ALL LEVELS ... to have timestamp
     Object.keys(NPMLOG.levels).forEach(function(k){
         // Name the anonymous function: Useful for capturing stack.
         LGR.prototype[k] = function customLGRLevel (){
-            arguments[0] = this._p(this.captureStack()[2]) + arguments[0]; // why stack[2]? think.
+            arguments[0] = this._p() + arguments[0]; // why stack[2]? think.
             return this.NPMLOG[k].apply(this, arguments);
         };
     });
@@ -105,24 +83,84 @@ LGR.prototype.log = function(){
     return this.NPMLOG['info'].apply(this, arguments);
 };
 
+/*
+       Always nice to have __FUNC__, __FILE__, and __LINE__.
+       Referred from http://stackoverflow.com/questions/11386492/accessing-line-number-in-v8-javascript-chrome-node-js
+       Also read https://github.com/v8/v8/wiki/Stack-Trace-API
+    */
+
+LGR.prototype.captureStack = function (){
+    // Hijack the Error.prepareStackTrace() function, which can be used to format the captured structuredStack.
+    var
+        orig = Error.prepareStackTrace,
+        err,
+        stack;
+
+    Error.prepareStackTrace = function(_, structuredStack){
+        return structuredStack;
+    };
+
+    err = new Error();
+    
+
+    // Naming the anonymous function allows us to skip the top of the stack till customLGRLevel
+    Error.captureStackTrace(err, LGR.customLGRLevel);
+    stack = err.stack;
+
+    // Don't forget to restore the hijacked function.
+    Error.prepareStackTrace = orig;
+    return stack;
+};
+
 /* Sets log format for a user */
 LGR.prototype.setLogFormat = function(val){
+    /*
+        Now, no need to get stack trace every time ... use in template only if it is given
+    */
+    var
+        printStackTrace = false,
+        templatePrints  = [
+                            '__FUNC__',
+                            '__LINE__',
+                            '__FILE__',
+                            '__COLM__'
+                        ];
+    templatePrints.forEach(function(data){
+        if(_.contains(val,data))
+            printStackTrace = true;
+    });
+
+    if(printStackTrace){
+        Object.keys(NPMLOG.levels).forEach(function(k){
+            LGR.prototype[k] = function customLGRLevel (){
+                arguments[0] = this._p(1) + arguments[0];
+                return this.NPMLOG[k].apply(this, arguments);
+            };
+        });
+    }
+
     this.logFormat =  _.template(val);
 };
 
 /* returns log prefix */
-LGR.prototype._p = function(callSiteObj){
-    return this.logFormat({
+LGR.prototype._p = function(addStuff){
+    var obj = {
         "ram"       :  JSON.stringify(process.memoryUsage()),
         "ts"        :  MOMENT().format("YYYY-MM-DD HH:mm:ss"),
         "uptime"    : process.uptime(),
         "pid"       : process.pid,
-        "count"     : this.count,
-        "__FUNC__"  : callSiteObj.getFunctionName() || '(anon)',
-        "__FILE__"  : callSiteObj.getFileName(),
-        "__LINE__"  : callSiteObj.getLineNumber(),
-        "__COLM__"  : callSiteObj.getColumnNumber(),
-    });
+        "count"     : this.count
+    };
+
+    if(addStuff){
+        var callSiteObj = this.captureStack()[2];
+        _.set(obj,"__FUNC__",callSiteObj.getFunctionName() || '(anon)');
+        _.set(obj,"__FILE__",callSiteObj.getFileName());
+        _.set(obj,"__LINE__",callSiteObj.getLineNumber());
+        _.set(obj,"__COLM__",callSiteObj.getColumnNumber());
+
+    }
+    return this.logFormat(obj);
 };
 
 LGR.prototype.setLevel = function(level){
