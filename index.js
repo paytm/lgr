@@ -98,7 +98,7 @@ function LGR(opts) {
    Also read https://github.com/v8/v8/wiki/Stack-Trace-API
 */
 
-LGR.prototype.captureStack = function (){
+function captureStack(){
     // Hijack the Error.prepareStackTrace() function, which can be used to format the captured structuredStack.
     var
         orig = Error.prepareStackTrace,
@@ -147,7 +147,7 @@ LGR.prototype._p = function(){
         callSiteObj;
 
     if(this.STACK_TRACE){
-        callSiteObj = this.captureStack()[2];
+        callSiteObj = captureStack()[2];
         _.set(logFormatObject,"__FUNC__",callSiteObj.getFunctionName() || '(anon)');
         _.set(logFormatObject,"__FILE__",callSiteObj.getFileName());
         _.set(logFormatObject,"__LINE__",callSiteObj.getLineNumber());
