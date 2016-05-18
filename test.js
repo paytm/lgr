@@ -15,7 +15,7 @@ var
 */
 
 LOG.level = 'verbose';                      // Not to be confused, doesn't set the level. See the silly logs below.
-LOG.info('TEST', 'LEVEL', LOG.getLevel());
+LOG.log('TEST', 'LEVEL', LOG.getLevel());
 
 LOG.setOut();
 LOG.info('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
@@ -45,6 +45,11 @@ LOG.info('SILL', 'LEVEL', LOG.getLevel());
 LOG.setLevel('silly');
 LOG.silly('SILL', "O Yaara silly silly");
 LOG.info('SILL', 'LEVEL', LOG.getLevel());
+
+
+LOG.setLogFormat('<%= ts %> [<%= uptime %>] ');
+testFunction();
+
 
 LOG.silly('TEST', "Levels:", LOG.getLevels());
 
