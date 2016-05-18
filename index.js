@@ -147,7 +147,7 @@ LGR.prototype._p = function(){
         callSiteObj;
 
     if(this.STACK_TRACE){
-        callSiteObj = captureStack()[2];
+        callSiteObj = captureStack()[3];
         _.set(logFormatObject,"__FUNC__",callSiteObj.getFunctionName() || '(anon)');
         _.set(logFormatObject,"__FILE__",callSiteObj.getFileName());
         _.set(logFormatObject,"__LINE__",callSiteObj.getLineNumber());
