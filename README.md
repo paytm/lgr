@@ -23,7 +23,10 @@ You can set log format
 // possible options are "ram" , "ts" "uptime" "pid", "count",
 // and "__FUNC__", "__FILE__", "__LINE__", "__COLM__". C Forever. :D
 log.setLogFormat('<%= ts %> [<%= uptime %>] ');
-```
+
+//you can also set log formats for specific log levels
+log.setLogFormat('info','<%= ts %>');
+``` 
 
 You can set Log level
 ```
