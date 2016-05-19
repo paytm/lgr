@@ -46,7 +46,11 @@ function LGR(opts) {
     */
     this.setErr();
 
+    /*
+        setting log format
+    */
 
+    this.setLogFormat('<%= ts %> [<%= uptime %>] [<%= count %>]');
     /*
       Add custom error level critical, which is used to log critical errors
    */
@@ -77,18 +81,6 @@ function LGR(opts) {
     Object.keys(NPMLOG.levels).forEach(function(k){
         // Name the anonymous function: Useful for capturing stack.
         LGR.prototype[k] = function customLGRLevel (){
-            //for the very first time ... could be ignored
-            if (_.get(this.levelSpecs,k,null) === null) {
-                var specs = {
-                    logFormat       : '<%= ts %> [<%= uptime %>] [<%= count %>]',
-                    stackTrace      : false
-                };
-
-                _.set(this.levelSpecs,k,specs);
-
-                this.setLogFormat(k,'<%= ts %> [<%= uptime %>] [<%= count %>]');            
-            }            
-            
             arguments[0] = this._p(k) + arguments[0];
             return this.NPMLOG[k].apply(this, arguments);
         };
@@ -139,7 +131,7 @@ LGR.prototype.setLogFormat = function(level,val){
 
     if (!val) {
         val = level;
-        Object.keys(levelSpecs).forEach(function(singleLevel){
+        Object.keys(NPMLOG.levels).forEach(function(singleLevel){
             _.set(levelSpecs,singleLevel + '.logFormat',_.template(val));
 
             stackTrace = TEMPLATE_PRINTS.some(function(templatePrint){
