@@ -21,12 +21,13 @@ var
                             '__LINE__',
                             '__FILE__',
                             '__COLM__'
-                        ],
-
-    levelSpecs          = {};
+                        ];
 
 function LGR(opts) {
-
+    /*
+        level specs
+    */
+    this.levelSpecs = {};
     this.NPMLOG = NPMLOG;
 
     /*
@@ -77,13 +78,13 @@ function LGR(opts) {
         // Name the anonymous function: Useful for capturing stack.
         LGR.prototype[k] = function customLGRLevel (){
             //for the very first time ... could be ignored
-            if (_.get(levelSpecs,k,null) === null) {
+            if (_.get(this.levelSpecs,k,null) === null) {
                 var specs = {
                     logFormat       : '<%= ts %> [<%= uptime %>] [<%= count %>]',
                     stackTrace      : false
                 };
 
-                _.set(levelSpecs,k,specs);
+                _.set(this.levelSpecs,k,specs);
 
                 this.setLogFormat(k,'<%= ts %> [<%= uptime %>] [<%= count %>]');            
             }            
@@ -131,12 +132,17 @@ function captureStack(){
 
 /* Sets log format for a user */
 LGR.prototype.setLogFormat = function(level,val){
+
+    var
+        levelSpecs = this.levelSpecs,
+        stackTrace;
+
     if (!val) {
         val = level;
         Object.keys(levelSpecs).forEach(function(singleLevel){
             _.set(levelSpecs,singleLevel + '.logFormat',_.template(val));
 
-            var stackTrace = TEMPLATE_PRINTS.some(function(templatePrint){
+            stackTrace = TEMPLATE_PRINTS.some(function(templatePrint){
                         return (val.indexOf(templatePrint) > -1);
                     });
             _.set(levelSpecs,singleLevel + '.stackTrace',stackTrace);
@@ -144,11 +150,13 @@ LGR.prototype.setLogFormat = function(level,val){
     } else {
 
         _.set(levelSpecs,level + '.logFormat',_.template(val));
-        var stackTrace = TEMPLATE_PRINTS.some(function(templatePrint){
+        stackTrace = TEMPLATE_PRINTS.some(function(templatePrint){
                         return (val.indexOf(templatePrint) > -1);
                     });
         _.set(levelSpecs,level + '.stackTrace',stackTrace);
     } 
+
+    this.levelSpecs = levelSpecs;
 
 };
 
@@ -164,7 +172,7 @@ LGR.prototype._p = function(level){
         },
         callSiteObj;
 
-    if(_.get(levelSpecs,level + '.stackTrace',false)){
+    if(_.get(this.levelSpecs,level + '.stackTrace',false)){
         callSiteObj = captureStack()[3];
         _.set(logFormatObject,"__FUNC__",callSiteObj.getFunctionName() || '(anon)');
         _.set(logFormatObject,"__FILE__",callSiteObj.getFileName());
@@ -172,7 +180,7 @@ LGR.prototype._p = function(level){
         _.set(logFormatObject,"__COLM__",callSiteObj.getColumnNumber());
     }
 
-    return levelSpecs[level].logFormat(logFormatObject);
+    return this.levelSpecs[level].logFormat(logFormatObject);
 
 };
 
