@@ -76,9 +76,6 @@ log.setErr()
 
 ## ToDo and improvements
 
-- Should have support for identifying CALLing Function/ line number
-- Should have support for Prefixing Filename/ function name, line number automatically
-- Should be able to handle StackTrace gracefully and show properly.
 - Should have Sync and Buffer Modes Also
 - Should not raise a problem if objects passed to it are not available etc. 
 - Should have Child Loggers like Bunyan where loggers get chained and scoped
@@ -92,4 +89,3 @@ See Tags
 
 ## Test
 Just run test.js
-
