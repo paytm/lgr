@@ -21,22 +21,18 @@ var
                             '__LINE__',
                             '__FILE__',
                             '__COLM__'
-                        ];
+                        ],
+
+    levelSpecs          = {};
 
 function LGR(opts) {
+
     this.NPMLOG = NPMLOG;
 
     /*
         maintain internal count
     */
-    this.count = 0;
-
-    /*
-        Log format
-        "ram" , "ts" "uptime" "pid"
-
-    */
-    this.setLogFormat('<%= ts %> [<%= uptime %>] [<%= count %>] ');
+    this.count = 0;   
 
     /*
         Default output stream ... default is process.stdout
@@ -80,16 +76,24 @@ function LGR(opts) {
     Object.keys(NPMLOG.levels).forEach(function(k){
         // Name the anonymous function: Useful for capturing stack.
         LGR.prototype[k] = function customLGRLevel (){
-            arguments[0] = this._p() + arguments[0];
+            //for the very first time ... could be ignored
+            if (_.get(levelSpecs,k,null) === null) {
+                var specs = {
+                    logFormat       : '<%= ts %> [<%= uptime %>] [<%= count %>]',
+                    stackTrace      : false
+                };
+
+                _.set(levelSpecs,k,specs);
+
+                this.setLogFormat(k,'<%= ts %> [<%= uptime %>] [<%= count %>]');            
+            }            
+            
+            arguments[0] = this._p(k) + arguments[0];
             return this.NPMLOG[k].apply(this, arguments);
         };
     });
 
     LGR.prototype['log'] = LGR.prototype['info'];
-    /*
-        by default we do not need to do stack trace
-    */
-    this.STACK_TRACE = false;
 }
 
 /*
@@ -119,41 +123,57 @@ function captureStack(){
     // Don't forget to restore the hijacked function.
     Error.prepareStackTrace = orig;
     return stack;
-};
+}
+
+/*
+    custom log formats for each level
+*/
 
 /* Sets log format for a user */
-LGR.prototype.setLogFormat = function(val){
-    this.logFormat  =  _.template(val);
+LGR.prototype.setLogFormat = function(level,val){
+    if (!val) {
+        val = level;
+        Object.keys(levelSpecs).forEach(function(singleLevel){
+            _.set(levelSpecs,singleLevel + '.logFormat',_.template(val));
 
-    /*
-        Now, no need to get stack trace every time ... use in template only if it is given
-    */
-    this.STACK_TRACE = TEMPLATE_PRINTS.some(function(templatePrint){
-        return (val.indexOf(templatePrint) > -1);
-    });
-    
+            var stackTrace = TEMPLATE_PRINTS.some(function(templatePrint){
+                        return (val.indexOf(templatePrint) > -1);
+                    });
+            _.set(levelSpecs,singleLevel + '.stackTrace',stackTrace);
+        });
+    } else {
+
+        _.set(levelSpecs,level + '.logFormat',_.template(val));
+        var stackTrace = TEMPLATE_PRINTS.some(function(templatePrint){
+                        return (val.indexOf(templatePrint) > -1);
+                    });
+        _.set(levelSpecs,level + '.stackTrace',stackTrace);
+    } 
+
 };
 
 /* returns log prefix */
-LGR.prototype._p = function(){
+LGR.prototype._p = function(level){
     var 
         logFormatObject = {
-            "ram"       :  JSON.stringify(process.memoryUsage()),
-            "ts"        :  MOMENT().format("YYYY-MM-DD HH:mm:ss"),
+            "ram"       : JSON.stringify(process.memoryUsage()),
+            "ts"        : MOMENT().format("YYYY-MM-DD HH:mm:ss"),
             "uptime"    : process.uptime(),
             "pid"       : process.pid,
             "count"     : this.count
         },
         callSiteObj;
 
-    if(this.STACK_TRACE){
+    if(_.get(levelSpecs,level + '.stackTrace',false)){
         callSiteObj = captureStack()[3];
         _.set(logFormatObject,"__FUNC__",callSiteObj.getFunctionName() || '(anon)');
         _.set(logFormatObject,"__FILE__",callSiteObj.getFileName());
         _.set(logFormatObject,"__LINE__",callSiteObj.getLineNumber());
         _.set(logFormatObject,"__COLM__",callSiteObj.getColumnNumber());
     }
-    return this.logFormat(logFormatObject);
+
+    return levelSpecs[level].logFormat(logFormatObject);
+
 };
 
 LGR.prototype.setLevel = function(level){

@@ -17,10 +17,14 @@ var
 LOG.level = 'verbose';                      // Not to be confused, doesn't set the level. See the silly logs below.
 LOG.log('TEST', 'LEVEL', LOG.getLevel());
 
-LOG.setOut();
+// /LOG.setOut();
 LOG.info('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
 
-LOG.setLogFormat('<%= ts %> [<%= uptime %>] ');
+LOG.setLogFormat('error','<%= ts %> [<%= uptime %>]');
+LOG.setLogFormat('info','[<%= uptime %>]');
+
+LOG.error("hello","error");
+LOG.info("hello","info");
 
 LOG.setLevel('verbose');
 LOG.info('TEST', 'LEVEL', LOG.getLevel());
