@@ -185,6 +185,28 @@ LGR.prototype.getLevel = function() {
     return this.NPMLOG.level;
 };
 
+/* Add new level */
+LGR.prototype.addLevel = function (name, priority, displayName, foregroundColour, backgroundColour) {
+    if ( !name || !priority ) {
+        return;
+    } else {
+        displayName         = displayName || name;
+        foregroundColour    = foregroundColour || '';
+        backgroundColour    = backgroundColour || '';
+
+
+        NPMLOG.addLevel(name, priority, { 'fg' : foregroundColour, 'bg' : backgroundColour }, displayName);
+
+        LGR.prototype[name] = function customLGRLevel (){
+            arguments[0] = this._p(name) + arguments[0];
+            return this.NPMLOG[name].apply(this, arguments);
+        };
+
+        this.setLogFormat(name,'<%= ts %> [<%= uptime %>] [<%= count %>]');
+    }
+};
+
+
 LGR.prototype.getLevels = function() {
     return this.NPMLOG.levels;
 };
