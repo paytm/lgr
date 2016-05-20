@@ -188,7 +188,7 @@ LGR.prototype.getLevel = function() {
 /* Add new level */
 LGR.prototype.addLevel = function (name, priority, displayName, foregroundColour, backgroundColour) {
     if ( !name || !priority ) {
-        return;
+        throw new Error('Name or priority missing');
     } else {
         displayName         = displayName || name;
         foregroundColour    = foregroundColour || '';
