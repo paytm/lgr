@@ -186,16 +186,14 @@ LGR.prototype.getLevel = function() {
 };
 
 /* Add new level */
-LGR.prototype.addLevel = function (name, priority, displayName, foregroundColour, backgroundColour) {
+LGR.prototype.addLevel = function (name, priority, style, displayName) {
     if ( !name || !priority ) {
         throw new Error('Name or priority missing');
     } else {
         displayName         = displayName || name;
-        foregroundColour    = foregroundColour || '';
-        backgroundColour    = backgroundColour || '';
+        style               = style || {};
 
-
-        NPMLOG.addLevel(name, priority, { 'fg' : foregroundColour, 'bg' : backgroundColour }, displayName);
+        NPMLOG.addLevel(name, priority, style, displayName);
 
         LGR.prototype[name] = function customLGRLevel (){
             arguments[0] = this._p(name) + arguments[0];
