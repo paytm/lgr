@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/paytm/lgr",
   "dependencies": {
-    "npmlog": "~1.2.1",
+    "npmlog": "https://github.com/paytm/npmlog",
     "lodash": "~3.10.1",
     "moment": "~2.10.3"
   },

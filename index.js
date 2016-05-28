@@ -52,30 +52,16 @@ function LGR(opts) {
 
     this.setLogFormat('<%= ts %> [<%= uptime %>] [<%= count %>]');
     /*
-      Add custom error level critical, which is used to log critical errors
-   */
-    NPMLOG.addLevel('critical', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'CRITICAL!' );
+        Add custom error level critical, which is used to log critical errors
+    */
+    this.addLevel('critical', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'CRITICAL!', process.stderr );
 
     /*
         npmlog emits log and log.<lvl> event after that
-        Hence we put a hook in both the events and change the stream before the log is written
-        Since events are sync, this sohuld not be a problem
 
+        But since we would like to move away from the EventEmitter,
+        we use the Paytm's fork of npmlog. This fork accepts an additional parameter for the stream.
     */
-    NPMLOG.on('log', function(obj){
-        this.count++;
-        NPMLOG.stream = this.outputStream;
-    }.bind(this));
-
-    NPMLOG.on('log.error', function(obj){
-        NPMLOG.stream = this.errorStream;
-        /* STDOUT will not get a copy of this erro rmessage */
-    }.bind(this));
-
-    NPMLOG.on('log.critical', function(obj){
-        NPMLOG.stream = this.errorStream;
-        /* STDOUT will not get a copy of this erro rmessage */
-    }.bind(this));
 
     // Override ALL LEVELS ... to have timestamp
     Object.keys(NPMLOG.levels).forEach(function(k){
@@ -86,7 +72,7 @@ function LGR(opts) {
         };
     });
 
-    LGR.prototype['log'] = LGR.prototype['info'];
+    LGR.prototype.log = LGR.prototype.info;
 }
 
 /*
@@ -186,21 +172,21 @@ LGR.prototype.getLevel = function() {
 };
 
 /* Add new level */
-LGR.prototype.addLevel = function (name, priority, style, displayName) {
+LGR.prototype.addLevel = function (name, priority, style, displayName, stream) {
     if ( !name || !priority ) {
         throw new Error('Name or priority missing');
     } else {
         displayName         = displayName || name;
         style               = style || {};
 
-        NPMLOG.addLevel(name, priority, style, displayName);
+        NPMLOG.addLevel(name, priority, style, displayName, stream);
 
         LGR.prototype[name] = function customLGRLevel (){
             arguments[0] = this._p(name) + arguments[0];
             return this.NPMLOG[name].apply(this, arguments);
         };
 
-        this.setLogFormat(name,'<%= ts %> [<%= uptime %>] [<%= count %>]');
+        this.setLogFormat(name,'<%= ts %> [<%= uptime %>] [<%= count %>] ');
     }
 };
 

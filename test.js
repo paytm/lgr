@@ -70,6 +70,7 @@ LOG.setLevel('silly');
 LOG.silly('SILL', "O Yaara silly silly");
 LOG.info('SILL', 'LEVEL', LOG.getLevel());
 
+LOG.critical('Woah!', "Is this even printing?");
 
 LOG.setLogFormat('<%= ts %> [<%= uptime %>] ');
 testFunction();
