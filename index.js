@@ -185,6 +185,26 @@ LGR.prototype.getLevel = function() {
     return this.NPMLOG.level;
 };
 
+/* Add new level */
+LGR.prototype.addLevel = function (name, priority, style, displayName) {
+    if ( !name || !priority ) {
+        throw new Error('Name or priority missing');
+    } else {
+        displayName         = displayName || name;
+        style               = style || {};
+
+        NPMLOG.addLevel(name, priority, style, displayName);
+
+        LGR.prototype[name] = function customLGRLevel (){
+            arguments[0] = this._p(name) + arguments[0];
+            return this.NPMLOG[name].apply(this, arguments);
+        };
+
+        this.setLogFormat(name,'<%= ts %> [<%= uptime %>] [<%= count %>]');
+    }
+};
+
+
 LGR.prototype.getLevels = function() {
     return this.NPMLOG.levels;
 };

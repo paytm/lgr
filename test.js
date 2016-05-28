@@ -43,6 +43,26 @@ testFunction();
 LOG.info('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
 LOG.error('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
 
+
+try{
+    LOG.addLevel('vk');
+} catch(e){
+    LOG.error("Error while adding level : ", e);
+}
+
+try{
+    LOG.addLevel();
+} catch(e){
+    LOG.error("Error while adding level : ", e);
+}
+
+LOG.addLevel('dummyTest',100000);
+LOG.dummyTest("hello","dummy test log");
+
+LOG.addLevel('dummyTest1',100000,{'fg':'black','background':'white'});
+LOG.dummyTest1("hello","dummy test 1 log");
+
+
 LOG.level = 'silly';
 LOG.silly('SILL', "Yaara silly silly");
 LOG.info('SILL', 'LEVEL', LOG.getLevel());
