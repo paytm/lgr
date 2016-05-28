@@ -1,6 +1,6 @@
 {
   "name": "lgr",
-  "version": "0.0.12",
+  "version": "0.1.0",
   "description": "Generic Logger for nodejs Apps",
   "main": "index.js",
   "scripts": {
