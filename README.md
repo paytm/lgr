@@ -60,13 +60,14 @@ You can add your own custom levels
 
 The level name and priority are mandatory arguments, and
 lgr will throw an error if either is missing. You can
-define your own style and prefix, npm style.
+define your own style and prefix, npm style, with an additional
+stream parameter.
 ```
 // mandatory arguments
 log.addLevel('wall', 3500);
 
 // optional arguments
-log.addLevel('hell', 6666, {fg: 'black', bg: 'red'}, 'HELL!');
+log.addLevel('hell', 6666, {fg: 'black', bg: 'red'}, 'HELL!', process.stderr);
 ```
 
 You can Redirect outout / error to log files
@@ -84,6 +85,7 @@ log.setErr()
 
 ## Features
 - All of npmlog as of now
+- Not an EventEmitter (this speeds up things, as we no longer need to emit events and register listeners).
 - A starting timestamp when logger was initiated. Gives 2 timestamps , one global and another the starting timestamp of the process.
 - The Extra information in Logs is thrown out in Formatted Strings like Nginx Logs
 
