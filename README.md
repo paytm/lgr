@@ -4,18 +4,18 @@ Generic Logger
 [![Build Status](https://travis-ci.org/paytm/lgr.svg?branch=master)](https://travis-ci.org/paytm/lgr)
 [![Coverage Status](https://coveralls.io/repos/github/paytm/lgr/badge.svg?branch=master)](https://coveralls.io/github/paytm/lgr?branch=master)
 
-Idea is to give best of Winston, Bunyan and npmlog ( https://github.com/npm/npmlog )
+Idea is to give best of Winston, Bunyan and [npmlog](https://github.com/npm/npmlog)
 
 ## Usage
 Eactly like npmlog , but giving a snippet here
 ```
- // Use 1 logger through application
- var log = require('lgr')
+// Use 1 logger through application
+var log = require('lgr');
 
- // when in debug set Debug level 
- log.level = 'verbose'
+// when in debug set Debug level
+log.setLevel('verbose');
 
-log.info('gateway', 'Check', null)
+log.info('gateway', 'Check', null);
 ```
 
 You can set log format
@@ -27,7 +27,7 @@ log.setLogFormat('<%= ts %> [<%= uptime %>] ');
 
 //you can also set log formats for specific log levels
 log.setLogFormat('info','<%= ts %>');
-``` 
+```
 
 You can set Log level
 ```
@@ -56,6 +56,19 @@ Returns:
 */
 ```
 
+You can add your own custom levels
+
+The level name and priority are mandatory arguments, and
+lgr will throw an error if either is missing. You can
+define your own style and prefix, npm style.
+```
+// mandatory arguments
+log.addLevel('wall', 3500);
+
+// optional arguments
+log.addLevel('hell', 6666, {fg: 'black', bg: 'red'}, 'HELL!');
+```
+
 You can Redirect outout / error to log files
 ```
 log.setOut('/path/of/file/to/write/info/messages')
@@ -78,7 +91,7 @@ log.setErr()
 ## ToDo and improvements
 
 - Should have Sync and Buffer Modes Also
-- Should not raise a problem if objects passed to it are not available etc. 
+- Should not raise a problem if objects passed to it are not available etc.
 - Should have Child Loggers like Bunyan where loggers get chained and scoped
 - Should be able to handle "TypeError: Converting circular structure to JSON"
 - Should be able to provide plugin support for SLACK, e-Mail . Same log should go to STDOUT/ERR + Plugin.
