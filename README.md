@@ -70,6 +70,10 @@ log.addLevel('wall', 3500);
 log.addLevel('hell', 6666, {fg: 'black', bg: 'red'}, 'HELL!', process.stderr);
 ```
 
+### Deprecated
+We're moving from [`npmlog`](https://github.com/npm/npmlog) to [Paytm's fork of `npmlog`](https://github.com/paytm/npmlog).
+With this change, the following APIs will no longer behave as expected.
+
 You can Redirect outout / error to log files
 ```
 log.setOut('/path/of/file/to/write/info/messages')
@@ -91,7 +95,7 @@ log.setErr()
 
 
 ## ToDo and improvements
-
+- Should have configurable output streams per log level
 - Should have Sync and Buffer Modes Also
 - Should not raise a problem if objects passed to it are not available etc.
 - Should have Child Loggers like Bunyan where loggers get chained and scoped
