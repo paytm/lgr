@@ -15,13 +15,12 @@ var
 */
 
 LOG.level = 'verbose';                      // Not to be confused, doesn't set the level. See the silly logs below.
-LOG.log('TEST', 'LEVEL', LOG.getLevel());
+LOG.info('TEST', 'LEVEL');
+
+LOG.getLevel();
 
 // /LOG.setOut();
 LOG.info('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
-
-LOG.setLogFormat('error','<%= ts %> [<%= uptime %>]');
-LOG.setLogFormat('info','[<%= uptime %>]');
 
 LOG.error("hello","error");
 LOG.info("hello","info");
@@ -29,10 +28,8 @@ LOG.info("hello","info");
 LOG.setLevel('verbose');
 LOG.info('TEST', 'LEVEL', LOG.getLevel());
 
-LOG.setErr();
 LOG.error('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
 
-LOG.setLogFormat('In: <%= __FUNC__ %>() At: <%= __FILE__ %>:<%= __LINE__ %>: ');
 function testFunction () {
     LOG.info('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
     LOG.error('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
@@ -72,14 +69,18 @@ LOG.info('SILL', 'LEVEL', LOG.getLevel());
 
 LOG.critical('Woah!', "Is this even printing?");
 
-LOG.setLogFormat('<%= ts %> [<%= uptime %>] ');
 testFunction();
 
-
 LOG.silly('TEST', "Levels:", LOG.getLevels());
-
-LOG.setOut(PATH.join(__dirname, 'testout.log'));
 LOG.info('TEST in file', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
-
-LOG.setErr(PATH.join(__dirname, 'testerror.log'));
 LOG.error('TEST in file', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});
+
+/*** TEST WITH https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof **/
+LOG.info(37, 3.14, Math.LN2, Infinity, NaN, Number(1));
+LOG.info("", "bla", typeof 1, String("abc"));
+LOG.info(true ,false, Boolean(true));
+LOG.info(undefined);
+LOG.info({a:1}, [1, 2, 4], new Date());
+LOG.info(new Boolean(true), new Number(1), new String("abc"));
+LOG.info(function(){}, Math.sin , null);
+LOG.info(/s/);

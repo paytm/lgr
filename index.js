@@ -2,77 +2,50 @@
 "use strict";
 
 var
-
-    FS                  = require('fs'),
-    UTIL                = require('util'),
-
     /* NPM Third Party */
     _                   = require('lodash'),
-    NPMLOG              = require('npmlog'),
+    V                   = require('validator'),
+
+    // NPMLOG              = require('npmlog'),
     MOMENT              = require('moment'),
-    
+    // ANSI                = require('ansi'),
+
     /* NPM Paytm */
-    
+
     /* Project Files */
 
     /* Global */
-    TEMPLATE_PRINTS     = [
-                            '__FUNC__',
-                            '__LINE__',
-                            '__FILE__',
-                            '__COLM__'
-                        ];
+    ADDITIONAL_VARS = {
+        'ram'       : {},
+        'ts'        : {},
+        'uptime'    : {},
+        'pid'       : {},
+        'count'     : {},
+        '__FUNC__'  : {},
+        '__FILE__'  : {},
+        '__LINE__'  : {},
+        '__COLM__'  : {},
+    },
+
+    DEFAULT_LOGFORMAT   = '<%= prefix %> <%= ts %> [<%= uptime %>] [<%= count %>] <%= msg %>',
+    DEFAULT_STREAM      = process.stdout,
+    DEFAULT_WEIGHT      = 1000,
+    DEFAULT_PREFIX      = 'INFO',
+    DEFAULT_STYLE       = {};
+
 
 function LGR(opts) {
-    /*
-        level specs
-    */
-    this.levelSpecs = {};
-    this.NPMLOG = NPMLOG;
+    var self = this;
 
-    /*
-        maintain internal count
-    */
-    this.count = 0;   
+    this.count = 0; // Global count , sort of Id for log
 
-    /*
-        Default output stream ... default is process.stdout
-        This is changed to file if output has to go to file
-    */
-    this.setOut();
+    // will be later to set to levels object
+    this.levels = {};
 
-    /*
-        Default Error Stream ... default to process.stderr
-    */
-    this.setErr();
+    // currnetly set level
+    this.currentLevel = null;
 
-    /*
-        setting log format
-    */
-
-    this.setLogFormat('<%= ts %> [<%= uptime %>] [<%= count %>]');
-    /*
-        Add custom error level critical, which is used to log critical errors
-    */
-    this.addLevel('critical', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'CRITICAL!', process.stderr );
-
-    /*
-        npmlog emits log and log.<lvl> event after that
-
-        But since we would like to move away from the EventEmitter,
-        we use the Paytm's fork of npmlog. This fork accepts an additional parameter for the stream.
-    */
-
-    // Override ALL LEVELS ... to have timestamp
-    Object.keys(NPMLOG.levels).forEach(function(k){
-        // Name the anonymous function: Useful for capturing stack.
-        LGR.prototype[k] = function customLGRLevel (){
-            arguments[0] = this._p(k) + arguments[0];
-            return this.NPMLOG[k].apply(this, arguments);
-        };
-    });
-
-    LGR.prototype.log = LGR.prototype.info;
+    this.basicSettings();
 }
 
 /*
@@ -91,9 +64,7 @@ function captureStack(){
     Error.prepareStackTrace = function(_, structuredStack){
         return structuredStack;
     };
-
     err = new Error();
-    
 
     // Naming the anonymous function allows us to skip the top of the stack till customLGRLevel
     Error.captureStackTrace(err, LGR.customLGRLevel);
@@ -104,43 +75,9 @@ function captureStack(){
     return stack;
 }
 
-/*
-    custom log formats for each level
-*/
-
-/* Sets log format for a user */
-LGR.prototype.setLogFormat = function(level,val){
-
+/* returns the object according to demanded data */
+LGR.prototype._getInfoObj = function(level){
     var
-        levelSpecs = this.levelSpecs,
-        stackTrace;
-
-    if (!val) {
-        val = level;
-        Object.keys(NPMLOG.levels).forEach(function(singleLevel){
-            _.set(levelSpecs,singleLevel + '.logFormat',_.template(val));
-
-            stackTrace = TEMPLATE_PRINTS.some(function(templatePrint){
-                        return (val.indexOf(templatePrint) > -1);
-                    });
-            _.set(levelSpecs,singleLevel + '.stackTrace',stackTrace);
-        });
-    } else {
-
-        _.set(levelSpecs,level + '.logFormat',_.template(val));
-        stackTrace = TEMPLATE_PRINTS.some(function(templatePrint){
-                        return (val.indexOf(templatePrint) > -1);
-                    });
-        _.set(levelSpecs,level + '.stackTrace',stackTrace);
-    } 
-
-    this.levelSpecs = levelSpecs;
-
-};
-
-/* returns log prefix */
-LGR.prototype._p = function(level){
-    var 
         logFormatObject = {
             "ram"       : JSON.stringify(process.memoryUsage()),
             "ts"        : MOMENT().format("YYYY-MM-DD HH:mm:ss"),
@@ -149,8 +86,7 @@ LGR.prototype._p = function(level){
             "count"     : this.count
         },
         callSiteObj;
-
-    if(_.get(this.levelSpecs,level + '.stackTrace',false)){
+    if(level.stackTrace) {
         callSiteObj = captureStack()[3];
         _.set(logFormatObject,"__FUNC__",callSiteObj.getFunctionName() || '(anon)');
         _.set(logFormatObject,"__FILE__",callSiteObj.getFileName());
@@ -158,63 +94,169 @@ LGR.prototype._p = function(level){
         _.set(logFormatObject,"__COLM__",callSiteObj.getColumnNumber());
     }
 
-    return this.levelSpecs[level].logFormat(logFormatObject);
-
+    return logFormatObject;
 };
 
-LGR.prototype.setLevel = function(level){
-    this.level = level;
-    this.NPMLOG.level = level;
+LGR.prototype.setLevel = function(level) {
+    if(this.levels[level] === undefined) throw new Error('unknown level ' + lvl);
+    this.currentLevel = this.levels[level];
 };
 
-LGR.prototype.getLevel = function() {
-    return this.NPMLOG.level;
+LGR.prototype.getLevel = function() { return this.currentLevel.name; };
+LGR.prototype.getLevels = function() {
+    var
+        self    = this,
+        retObj  = {};
+
+    Object.keys(self.levels).forEach(function(key){
+        var lvl = self.levels[key];
+        retObj[lvl.name] = lvl.weight;
+    });
+
+    return retObj;
 };
 
-/* Add new level */
-LGR.prototype.addLevel = function (name, priority, style, displayName, stream) {
-    if ( !name || !priority ) {
+
+/* Levels */
+LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logFormat, stream){
+    /*
+        1. Lets just register the level
+        We cant create streams or ansi cursors here
+    */
+
+    var
+        self        = this,
+        stackTrace  = false;
+
+    if ( !levelName || !weight )
         throw new Error('Name or priority missing');
-    } else {
-        displayName         = displayName || name;
-        style               = style || {};
 
-        NPMLOG.addLevel(name, priority, style, displayName, stream);
 
-        LGR.prototype[name] = function customLGRLevel (){
-            arguments[0] = this._p(name) + arguments[0];
-            return this.NPMLOG[name].apply(this, arguments);
-        };
+    // Default fallback values
+    style       = style || DEFAULT_STYLE;
+    weight      = weight || DEFAULT_WEIGHT;
+    dispPrefix  = dispPrefix || DEFAULT_PREFIX;
+    logFormat   = logFormat || DEFAULT_LOGFORMAT;
+    stream      = stream || DEFAULT_STREAM; // If stream unspecified , then it is process.stdout
 
-        this.setLogFormat(name,'<%= ts %> [<%= uptime %>] [<%= count %>] ');
+
+    // Lets parse logformat and see if we need capture stack which is the heavy part
+    Object.keys(ADDITIONAL_VARS).forEach(function(key){
+        if(
+            logFormat.indexOf('__FUNC__') >= -1 ||
+            logFormat.indexOf('__FILE__') >= -1 ||
+            logFormat.indexOf('__LINE__') >= -1 ||
+            logFormat.indexOf('__COLM__') >= -1
+        ) {
+            stackTrace = true;
+        }
+    });
+
+    self.levels[levelName] = {
+        'name'          : levelName,
+        'weight'        : weight,
+        'style'         : style,
+        'dispPrefix'    : dispPrefix,
+        'stream'        : stream,
+        'logFormat'     : logFormat,
+        'logTemplate'   : _.template(logFormat),
+        'stackTrace'    : stackTrace,
+    };
+
+    // Bind the function
+    self[levelName] = function () {
+        // insert level as first argument
+        var a = new Array(arguments.length + 1);
+        a[0] = levelName;
+        for (var i = 0; i < arguments.length; i ++) a[i + 1] = arguments[i];
+        return this.writeLog.apply(this, arguments);
+    }.bind(this, levelName);
+};
+
+/*
+    Gets linear string for an argument
+    if error and has stack then we take stack
+    otherwise if it is an object or array we try to stringify it
+    if it is a function we do toString
+*/
+LGR.prototype._getlinearMsg = function (arg) {
+    var t = typeof arg;
+
+    // Specific type of error
+    if(t === 'string')   return V.toString(arg);
+    else if(t === 'function')   return t.toString();
+    else if(t === 'number') {
+        if(isNaN(arg)) return 'NaN';
+        return V.toString(arg);
+    }
+    else if(t === 'undefined') {
+        if (arg === undefined) return 'undefined';
+        else return V.toString(arg);
+    }
+    else if (t === 'object' && (arg instanceof Error) && arg.stack) return JSON.stringify(arg.stack);
+    else {
+        try {
+            return JSON.stringify(arg);
+        } catch(ex) { return 'cannot parse ' + V.toString(arg); }
     }
 };
 
+// main log writing code
+LGR.prototype.writeLog = function (lvl) {
+    var
+        self        = this,
+        logline     = '',
+        formatObj   = null,
+        finalLog    = null,
+        level       = self.levels[lvl];
 
-LGR.prototype.getLevels = function() {
-    return this.NPMLOG.levels;
+    // known level
+    if(level === undefined) throw new Error('unknown level ' + lvl);
+
+    // Don't do anything unless the log is less than the general log setting .
+    if (level.weight < self.currentLevel.weight) return;
+
+    // first lets concat all user sent args in a single line
+    for (var i = 1; i < arguments.length; i ++)
+        logline = logline + ' ' + self._getlinearMsg(arguments[i]);
+
+    // format the log according to the format
+    formatObj = self._getInfoObj(level);
+    formatObj.msg = logline;
+    formatObj.prefix = lvl;
+
+    // final line that goes to the stream
+    finalLog = level.logTemplate(formatObj);
+
+    // Add \n in the end after the formatting
+    finalLog += '\n';
+
+    level.stream.write(finalLog);
 };
 
-/* To set info to File/Stdout ... stdout by default */
-LGR.prototype.setOut = function(fileName){
-    if(fileName === undefined) this.outputStream = process.stdout;
-    else  this.outputStream = FS.createWriteStream(fileName, { flags: 'a', encoding: null });
-};
 
-/* To set Error to File/stderr */
-LGR.prototype.setErr = function(fileName){
-    if(fileName === undefined) this.errorStream = process.stderr;
-    else this.errorStream = FS.createWriteStream(fileName, { flags: 'a', encoding: null });
-};
+// initiate basic levels
+LGR.prototype.basicSettings = function() {
+    var self = this;
 
-/* To Flush the buffered files and everything */
-LGR.prototype.flush = function(){
+    /* Add log levels */
+    // log.prefixStyle = { fg: 'magenta' }
+    // log.headingStyle = { fg: 'white', bg: 'black' }
 
-    // Close the output stream if is not process.stdout
-    if(_.get(this.outputStream,'_handle.fd', null) !== 1) this.outputStream.end();
+    self.addLevel('silly', -Infinity, { inverse: true }, 'SILL');
+    self.addLevel('verbose', 1000, { fg: 'blue', bg: 'black' }, 'VERB');
+    self.addLevel('info', 2000, { fg: 'green' }, 'INFO');
+    self.addLevel('log', 2000, { fg: 'green' }, 'INFO');
+    self.addLevel('http', 3000, { fg: 'green', bg: 'black' });
+    self.addLevel('warn', 4000, { fg: 'black', bg: 'yellow' }, 'WARN');
 
-    // Close the err stream if is not process.stdout
-    if(_.get(this.errorStream,'_handle.fd', null) !== 2) this.errorStream.end();
+    self.addLevel('error', 5000, { fg: 'red', bg: 'black' }, 'ERR!', '<%= prefix %> <%= ts %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', process.stderr);
+    self.addLevel('critical', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'CRIT!', '<%= prefix %> <%= ts %> <%= ram %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', process.stderr);
+
+    self.addLevel('silent', Infinity);
+
+    // Set default level info
+    self.setLevel('info');
 };
 
 module.exports = new LGR();

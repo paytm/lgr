@@ -9,40 +9,34 @@ Idea is to give best of Winston, Bunyan and [npmlog](https://github.com/npm/npml
 ## Usage
 Eactly like npmlog , but giving a snippet here
 ```
-// Use 1 logger through application
+// Use 1 logger throughout application
 var log = require('lgr');
 
-// when in debug set Debug level
+// App invoked with -v ? set verbose level
 log.setLevel('verbose');
 
 log.info('gateway', 'Check', null);
 ```
 
-You can set log format
+
+### log levels
+For each log level name and priority are mandatory arguments.
+*Mandatory args*
+ - name
+ - priority
+
+*Optional args*
+ - Style ( default info style )
+ - Stream ( default process.stdout)
+ - LogFormat ( default )
 
 ```
-// possible options are "ram" , "ts" "uptime" "pid", "count",
-// and "__FUNC__", "__FILE__", "__LINE__", "__COLM__". C Forever. :D
-log.setLogFormat('<%= ts %> [<%= uptime %>] ');
+log.setLevel('verbose'); // set level 
 
-//you can also set log formats for specific log levels
-log.setLogFormat('info','<%= ts %>');
-```
-
-You can set Log level
-```
-log.setLevel('verbose');
-```
-
-You can get the current level
-```
 log.getLevel();
 // -> now returns 'verbose'
-```
 
-You can query the levels you can `setLevel` to
-```
-log.getLevels();
+log.getLevels(); // You can query the levels you can `setLevel` to
 /*
 Returns:
 { silly: -Infinity,
@@ -54,58 +48,49 @@ Returns:
   silent: Infinity,
   critical: 6000 }
 */
+
+log.addLevel('wall', 3500); // Add custom levels
+log.addLevel('hell', 6666, {fg: 'black', bg: 'red'}, 'HELL!', process.stderr); 
 ```
 
-You can add your own custom levels
+### log Formats
+Variables
+ - prefix : info, error , etc. from log level
+ - msg : The message that was passed to log
+ - ram : will give memory usage from process.memoryusage
+ - ts : current timestamp
+ - uptime : uptime of process
+ - pid : process id
+ - count : Log count , global for this process
+ - __FUNC__ : will invoke stacktrace and last visited function of code
+ - __FILE__ : will invoke stacktrace and last visited file at this log
+ - __LINE__ : will invoke stacktrace and last visited line at this log
+ - __COLM__ : will invoke stacktrace and show column number.
 
-The level name and priority are mandatory arguments, and
-lgr will throw an error if either is missing. You can
-define your own style and prefix, npm style, with an additional
-stream parameter.
 ```
-// mandatory arguments
-log.addLevel('wall', 3500);
+// and "__FUNC__", "__FILE__", "__LINE__", "__COLM__". C Forever. :D
+log.setLogFormat('<%= ts %> [<%= uptime %>] ');
 
-// optional arguments
-log.addLevel('hell', 6666, {fg: 'black', bg: 'red'}, 'HELL!', process.stderr);
+//you can also set log formats for specific log levels
+log.setLogFormat('info','<%= ts %>');
 ```
 
-### Deprecated
-We're moving from [`npmlog`](https://github.com/npm/npmlog) to [Paytm's fork of `npmlog`](https://github.com/paytm/npmlog).
-With this change, the following APIs will no longer behave as expected.
-
-You can Redirect outout / error to log files
-```
-log.setOut('/path/of/file/to/write/info/messages')
-
-// to redirect back to console
-log.setOut()
-
-log.setErr('/path/of/file/to/write/Error/messages')
-
-// to redirect back to STDERR
-log.setErr()
-```
+## Colors
+ - Only Prefix colors can be user controlled.
+ - Different color for system generated information.
+ - The user specified data is in white.
 
 ## Features
-- All of npmlog as of now
-- Not an EventEmitter (this speeds up things, as we no longer need to emit events and register listeners).
-- A starting timestamp when logger was initiated. Gives 2 timestamps , one global and another the starting timestamp of the process.
-- The Extra information in Logs is thrown out in Formatted Strings like Nginx Logs
+- Priority based log levels.
+- Streams can be tied to each level making it easier to redirect log anywhere.
+- User defined formatted logs with os specific and stack information.
 
+## Theory , design decisions
+- Decision to not incorporate file saving, logs in rabbitmq and to use streams instead comes from the learning of winston which incorporate transport system. this is designed to be leightweight and users must implement their own stream to make use of log outouts.
 
-## ToDo and improvements
-- Should have configurable output streams per log level
-- Should have Sync and Buffer Modes Also
-- Should not raise a problem if objects passed to it are not available etc.
-- Should have Child Loggers like Bunyan where loggers get chained and scoped
-- Should be able to handle "TypeError: Converting circular structure to JSON"
-- Should be able to provide plugin support for SLACK, e-Mail . Same log should go to STDOUT/ERR + Plugin.
-- Not Very important : Later on : Should be able to give Json type ingested Logs
-- Not Very Important: Probably a http server interface to see logs in case of Debug like http://bluejamesbond.github.io/Scribe.js/
+## ToDo and improvements : See Github Issues
 
-## ChangeLog
-See Tags
+## ChangeLog : See Tags
 
 ## Test
-Just run test.js
+Just run 'npm test'
