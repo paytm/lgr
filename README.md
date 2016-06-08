@@ -62,6 +62,7 @@ Variables
  - uptime : uptime of process
  - pid : process id
  - count : Log count , global for this process
+ - hostname : system hostname
  - __FUNC__ : will invoke stacktrace and last visited function of code
  - __FILE__ : will invoke stacktrace and last visited file at this log
  - __LINE__ : will invoke stacktrace and last visited line at this log

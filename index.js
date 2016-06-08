@@ -2,6 +2,8 @@
 "use strict";
 
 var
+
+    OS                  = require('os'),
     /* NPM Third Party */
     _                   = require('lodash'),
     V                   = require('validator'),
@@ -83,7 +85,8 @@ LGR.prototype._getInfoObj = function(level){
             "ts"        : MOMENT().format("YYYY-MM-DD HH:mm:ss"),
             "uptime"    : process.uptime(),
             "pid"       : process.pid,
-            "count"     : this.count
+            "count"     : this.count,
+            "hostname"  : OS.hostname(),
         },
         callSiteObj;
     if(level.stackTrace) {
@@ -250,7 +253,7 @@ LGR.prototype.basicSettings = function() {
     self.addLevel('http', 3000, { fg: 'green', bg: 'black' });
     self.addLevel('warn', 4000, { fg: 'black', bg: 'yellow' }, 'WARN');
 
-    self.addLevel('error', 5000, { fg: 'red', bg: 'black' }, 'ERR!', '<%= prefix %> <%= ts %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', process.stderr);
+    self.addLevel('error', 5000, { fg: 'red', bg: 'black' }, 'ERR!', '<%= prefix %> <%=hostname%> <%= ts %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', process.stderr);
     self.addLevel('critical', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'CRIT!', '<%= prefix %> <%= ts %> <%= ram %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', process.stderr);
 
     self.addLevel('silent', Infinity);
