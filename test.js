@@ -1,8 +1,8 @@
 /*jshint multistr: true ,node: true, mocha: true*/
-"use strict";
+'use strict';
 
 var
-    _                   = require("lodash"),
+    // _                   = require('lodash'),
     PATH                = require('path'),
     LOG                 = require('./index.js');
 
@@ -23,8 +23,8 @@ LOG.info('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' 
 LOG.setLogFormat('error','<%= ts %> [<%= uptime %>]');
 LOG.setLogFormat('info','[<%= uptime %>]');
 
-LOG.error("hello","error");
-LOG.info("hello","info");
+LOG.error('hello','error');
+LOG.info('hello','info');
 
 LOG.setLevel('verbose');
 LOG.info('TEST', 'LEVEL', LOG.getLevel());
@@ -47,36 +47,36 @@ LOG.error('TEST', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b'
 try{
     LOG.addLevel('vk');
 } catch(e){
-    LOG.error("Error while adding level : ", e);
+    LOG.error('Error while adding level : ', e);
 }
 
 try{
     LOG.addLevel();
 } catch(e){
-    LOG.error("Error while adding level : ", e);
+    LOG.error('Error while adding level : ', e);
 }
 
 LOG.addLevel('dummyTest',100000);
-LOG.dummyTest("hello","dummy test log");
+LOG.dummyTest('hello','dummy test log');
 
 LOG.addLevel('dummyTest1',100000,{'fg':'black','background':'white'});
-LOG.dummyTest1("hello","dummy test 1 log");
+LOG.dummyTest1('hello','dummy test 1 log');
 
 
 LOG.level = 'silly';
-LOG.silly('SILL', "Yaara silly silly");
+LOG.silly('SILL', 'Yaara silly silly');
 LOG.info('SILL', 'LEVEL', LOG.getLevel());
 LOG.setLevel('silly');
-LOG.silly('SILL', "O Yaara silly silly");
+LOG.silly('SILL', 'O Yaara silly silly');
 LOG.info('SILL', 'LEVEL', LOG.getLevel());
 
-LOG.critical('Woah!', "Is this even printing?");
+LOG.critical('Woah!', 'Is this even printing?');
 
 LOG.setLogFormat('<%= ts %> [<%= uptime %>] ');
 testFunction();
 
 
-LOG.silly('TEST', "Levels:", LOG.getLevels());
+LOG.silly('TEST', 'Levels:', LOG.getLevels());
 
 LOG.setOut(PATH.join(__dirname, 'testout.log'));
 LOG.info('TEST in file', 'Check', null, [], [ 1,2,'a',], {}, undefined, { 'a' : 1 , 'b' : 2}, function(){});

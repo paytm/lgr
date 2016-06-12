@@ -4,7 +4,8 @@
   "description": "Generic Logger for nodejs Apps",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul cover _mocha -- -R spec"
+    "test": "istanbul cover _mocha -- -R spec",
+    "jshint": "jshint --verbose *.js"
   },
   "repository": {
     "type": "git",
