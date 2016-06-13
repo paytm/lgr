@@ -120,6 +120,19 @@ LGR.prototype.getLevels = function() {
 };
 
 
+LGR.prototype._checkStackTraceReqd = function(logFormat){
+    Object.keys(ADDITIONAL_VARS).forEach(function(key){
+        if(
+            logFormat.indexOf('__FUNC__') >= -1 ||
+            logFormat.indexOf('__FILE__') >= -1 ||
+            logFormat.indexOf('__LINE__') >= -1 ||
+            logFormat.indexOf('__COLM__') >= -1
+        ) return true;
+        else return false;
+    });
+};
+
+
 /* Levels */
 LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logFormat, stream){
     /*
@@ -144,16 +157,7 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
 
 
     // Lets parse logformat and see if we need capture stack which is the heavy part
-    Object.keys(ADDITIONAL_VARS).forEach(function(key){
-        if(
-            logFormat.indexOf('__FUNC__') >= -1 ||
-            logFormat.indexOf('__FILE__') >= -1 ||
-            logFormat.indexOf('__LINE__') >= -1 ||
-            logFormat.indexOf('__COLM__') >= -1
-        ) {
-            stackTrace = true;
-        }
-    });
+    stackTrace = self._checkStackTraceReqd(logFormat);
 
     self.levels[levelName] = {
         'name'          : levelName,
@@ -175,6 +179,26 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
         return this.writeLog.apply(this, arguments);
     }.bind(this, levelName);
 };
+
+
+// Change a property of level
+LGR.prototype.editLevel = function(levelName, prop, newVal) {
+    /* weight, style, dispPrefix, logFormat, stream */
+    var
+        self = this,
+        opts = ['weight', 'style', 'dispPrefix', 'logFormat', 'stream'];
+
+    if(self.levels[levelName] === undefined) throw new Error('wrong level, see getlevels');
+    if(opts.indexOf(prop) <=-1) throw new Error('wrong property');
+
+    //set property
+    self.levels[levelName][prop] = newVal;
+
+    // Lets parse logformat and see if we need capture stack which is the heavy part
+    if(prop === 'logFormat')
+        self.levels[levelName].stackTrace = self._checkStackTraceReqd(newVal);
+};
+
 
 /*
     Gets linear string for an argument

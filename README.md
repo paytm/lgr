@@ -50,7 +50,14 @@ Returns:
 */
 
 log.addLevel('wall', 3500); // Add custom levels
-log.addLevel('hell', 6666, {fg: 'black', bg: 'red'}, 'HELL!', process.stderr); 
+log.addLevel('hell', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'hell!', '<%= prefix %> <%= ts %> <%= ram %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', process.stderr);
+
+
+// Edit level setting : done by same function call
+// log.editLevel(levelName, property, value) , properties are ['weight', 'style', 'dispPrefix', 'logFormat', 'stream']
+
+log.editLevel('info', 'stream', someStream)
+
 ```
 
 ### log Formats
