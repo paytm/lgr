@@ -61,20 +61,6 @@ describe('All params except Message', function() {
 });
 
 
-describe('Misc', function() {
-
-    it("get levels", function(done) {
-
-        assert(LOG.getLevel() === 'info');
-        JSON.stringify(LOG.getLevels()).should.equal('{"silly":null,"verbose":1000,"info":2000,"log":2000,"http":3000,"warn":4000,"error":5000,"critical":6000,"silent":null,"test":6000}');
-
-        done();
-    });
-
-
-});
-
-
 describe('Testing all types of messages', function() {
 
     var testStream = null;
@@ -167,4 +153,84 @@ describe('Testing all types of messages', function() {
     });
 
 });
+
+
+describe('Misc', function() {
+
+    var testStream = null;
+    before(function(done) {
+        testStream = require('./testStream.js');
+        done();
+    });
+
+    it("undefined set level", function(done) {
+        try {
+            LOG.setLevel('wrong');
+        }
+        catch(ex) {
+            ex.message.should.equal("unknown level wrong");
+            done();
+        }
+    });
+
+    it("undefined add level", function(done) {
+        try {
+            LOG.addLevel();
+        }
+        catch(ex) {
+            ex.message.should.equal("name missing");
+            done();
+        }
+    });
+
+    it("undefined add level weight", function(done) {
+        try {
+            LOG.addLevel('new');
+        }
+        catch(ex) {
+            ex.message.should.equal("weight missing");
+            done();
+        }
+    });
+
+    it("undefined set level name", function(done) {
+        try {
+            LOG.editLevel('wrongkey');
+        }
+        catch(ex) {
+            ex.message.should.equal("wrong level, see getlevels");
+            done();
+        }
+    });
+
+    it("undefined set level property", function(done) {
+        try {
+            LOG.editLevel('info', 'wrong prop', null);
+        }
+        catch(ex) {
+            ex.message.should.equal("wrong property");
+            done();
+        }
+    });
+
+
+    it("print low level log", function(done) {
+        LOG.setLevel('info');
+        LOG.verbose('verbose, should not print!!!');
+
+        done();
+    });
+
+
+    it("get levels", function(done) {
+
+        assert(LOG.getLevel() === 'info');
+        JSON.stringify(LOG.getLevels()).should.equal('{"silly":null,"verbose":1000,"info":2000,"log":2000,"http":3000,"warn":4000,"error":5000,"critical":6000,"silent":null,"test":6000}');
+
+        done();
+    });
+
+
+});
+
 

@@ -102,7 +102,7 @@ LGR.prototype._getInfoObj = function(level){
 };
 
 LGR.prototype.setLevel = function(level) {
-    if(this.levels[level] === undefined) throw new Error('unknown level ' + lvl);
+    if(this.levels[level] === undefined) throw new Error('unknown level ' + level);
     this.currentLevel = this.levels[level];
 };
 
@@ -143,13 +143,11 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
         self        = this,
         stackTrace  = false;
 
-    if ( !levelName || !weight )
-        throw new Error('Name or priority missing');
-
+    if (!levelName ) throw new Error('name missing');
+    if (!weight ) throw new Error('weight missing');
 
     // Default fallback values
     style       = style || DEFAULT_STYLE;
-    weight      = weight || DEFAULT_WEIGHT;
     dispPrefix  = dispPrefix || DEFAULT_PREFIX;
     logFormat   = logFormat || DEFAULT_LOGFORMAT;
     stream      = stream || DEFAULT_STREAM; // If stream unspecified , then it is process.stdout
@@ -175,7 +173,7 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
         var a = new Array(arguments.length + 1);
         a[0] = levelName;
         for (var i = 0; i < arguments.length; i ++) a[i + 1] = arguments[i];
-        return this.writeLog.apply(this, arguments);
+        return this._writeLog.apply(this, arguments);
     }.bind(this, levelName);
 };
 
@@ -207,7 +205,7 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
     otherwise if it is an object or array we try to stringify it
     if it is a function we do toString
 */
-LGR.prototype._getlinearMsg = function (arg) {
+LGR.prototype._getlinearMsg = function(arg) {
     var t = typeof arg;
 
     // Specific type of error
@@ -253,7 +251,7 @@ LGR.prototype._getlinearMsg = function (arg) {
 };
 
 // main log writing code
-LGR.prototype.writeLog = function (lvl) {
+LGR.prototype._writeLog = function (lvl) {
     var
         self        = this,
         logline     = '',
@@ -263,9 +261,6 @@ LGR.prototype.writeLog = function (lvl) {
 
     // increment count
     self.count++;
-
-    // known level
-    if(level === undefined) throw new Error('unknown level ' + lvl);
 
     // Don't do anything unless the log is less than the general log setting .
     if (level.weight < self.currentLevel.weight) return;
