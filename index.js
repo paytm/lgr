@@ -4,6 +4,7 @@
 var
 
     OS                  = require('os'),
+    UTIL                = require('util'),
     /* NPM Third Party */
     _                   = require('lodash'),
     V                   = require('validator'),
@@ -121,15 +122,13 @@ LGR.prototype.getLevels = function() {
 
 
 LGR.prototype._checkStackTraceReqd = function(logFormat){
-    Object.keys(ADDITIONAL_VARS).forEach(function(key){
-        if(
-            logFormat.indexOf('__FUNC__') >= -1 ||
-            logFormat.indexOf('__FILE__') >= -1 ||
-            logFormat.indexOf('__LINE__') >= -1 ||
-            logFormat.indexOf('__COLM__') >= -1
-        ) return true;
-        else return false;
-    });
+    if(
+        logFormat.indexOf('__FUNC__') >= -1 ||
+        logFormat.indexOf('__FILE__') >= -1 ||
+        logFormat.indexOf('__LINE__') >= -1 ||
+        logFormat.indexOf('__COLM__') >= -1
+    ) return true;
+    else return false;
 };
 
 
@@ -195,8 +194,10 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
     self.levels[levelName][prop] = newVal;
 
     // Lets parse logformat and see if we need capture stack which is the heavy part
-    if(prop === 'logFormat')
+    if(prop === 'logFormat') {
         self.levels[levelName].stackTrace = self._checkStackTraceReqd(newVal);
+        self.levels[levelName].logTemplate = _.template(newVal);
+    }
 };
 
 
@@ -211,7 +212,13 @@ LGR.prototype._getlinearMsg = function (arg) {
 
     // Specific type of error
     if(t === 'string')   return V.toString(arg);
-    else if(t === 'function')   return t.toString();
+    else if(t === 'function') {
+
+        // tostring only gives back 'function' at times
+        // using util.format here
+        // return t.toString();
+        return UTIL.format(t);
+    }
     else if(t === 'number') {
         if(isNaN(arg)) return 'NaN';
         return V.toString(arg);
@@ -220,10 +227,27 @@ LGR.prototype._getlinearMsg = function (arg) {
         if (arg === undefined) return 'undefined';
         else return V.toString(arg);
     }
-    else if (t === 'object' && (arg instanceof Error) && arg.stack) return JSON.stringify(arg.stack);
+
+    /*
+        Bug is json.stringify puts "" around each string
+
+        Using infinite util.inspect instead of e levels, as per http://stackoverflow.com/questions/10729276/how-can-i-get-the-full-object-in-node-js-console-log-rather-than-object
+    */
+    else if (t === 'object' && (arg instanceof Error) && arg.stack) {
+        return UTIL.inspect(arg.stack, {showHidden: false, depth: null, maxArrayLength: null});
+        // return UTIL.format(arg.stack);
+    }
+    else if (t === 'object') {
+        return UTIL.inspect(arg, {showHidden: false, depth: null, maxArrayLength: null});
+        // return JSON.stringify(arg.stack);
+        // return UTIL.format(arg.stack);
+    }
+
+    // no idea what is here
     else {
         try {
-            return JSON.stringify(arg);
+            return UTIL.inspect(arg, {showHidden: false, depth: null, maxArrayLength: null});
+            // return UTIL.format(arg);
         } catch(ex) { return 'cannot parse ' + V.toString(arg); }
     }
 };
@@ -237,6 +261,9 @@ LGR.prototype.writeLog = function (lvl) {
         finalLog    = null,
         level       = self.levels[lvl];
 
+    // increment count
+    self.count++;
+
     // known level
     if(level === undefined) throw new Error('unknown level ' + lvl);
 
@@ -245,12 +272,15 @@ LGR.prototype.writeLog = function (lvl) {
 
     // first lets concat all user sent args in a single line
     for (var i = 1; i < arguments.length; i ++)
-        logline = logline + ' ' + self._getlinearMsg(arguments[i]);
+        logline = logline + self._getlinearMsg(arguments[i]) + ' ';
+
+    // remove last Space if any
+    logline = logline.slice(0, -1);
 
     // format the log according to the format
     formatObj = self._getInfoObj(level);
     formatObj.msg = logline;
-    formatObj.prefix = lvl;
+    formatObj.prefix = level.dispPrefix;
 
     // final line that goes to the stream
     finalLog = level.logTemplate(formatObj);
