@@ -154,7 +154,7 @@ describe('Testing all types of messages', function() {
             should.exist(data);
 
             // should not be
-            data.should.not.equal('[Error: Hi]');
+            data.should.not.equal('[Error: Hi]\n');
 
             done();
         };
@@ -162,8 +162,17 @@ describe('Testing all types of messages', function() {
         LOG.test(new Error("Hi"));
     });
 
-});
+    it("Circular Json test case", function(done) {
+        testStream.testcb = function(data){
+            data.should.equal('{ b: [Circular] }\n');
+            done();
+        };
 
+        var a = {};
+        a.b = a;
+        LOG.test(a);
+    });
+});
 
 describe('Misc', function() {
 
