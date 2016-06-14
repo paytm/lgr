@@ -89,6 +89,16 @@ log.setLogFormat('info','<%= ts %>');
  - Different color for system generated information.
  - The user specified data is in white.
 
+## timestamp format
+To change timeformat for each level please change by `editLevel` 
+To change timeformat for all levels throughout 
+```
+log.updateTsFormat('YYYY-MM-DD HH:MM:SS.sss');
+
+```
+
+NOTE : `updateTsFormat`  actually gets all levels and overwrite the timestamp for each level.
+
 ## Features
 - Priority based log levels.
 - Streams can be tied to each level making it easier to redirect log anywhere.

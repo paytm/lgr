@@ -288,6 +288,21 @@ LGR.prototype._writeLog = function (lvl) {
     level.stream.write(finalLog);
 };
 
+// update timestamp for all levels
+LGR.prototype.updateTsFormat = function(tsFormat) {
+    this._updatePropertyAllLevels('tsFormat', tsFormat);
+};
+
+LGR.prototype._updatePropertyAllLevels = function(prop, newVal) {
+    var
+        self = this;
+
+    Object.keys(self.getLevels()).forEach(function(k){
+        self.editLevel(k, prop, newVal);
+    });
+};
+
+
 
 // initiate basic levels
 LGR.prototype.basicSettings = function() {

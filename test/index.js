@@ -21,7 +21,7 @@ describe('All params except Message', function() {
     });
 
     it("Add level", function(done) {
-        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>" ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream, 'x');
+        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>" ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream);
 
         done();
     });
@@ -39,7 +39,7 @@ describe('All params except Message', function() {
             j.prefix.should.equal('TEST!');
             j.hostname.should.equal(OS.hostname());
 
-            var parsedDt = M(j.ts, "x", true);
+            var parsedDt = M(j.ts, "YYYY-MM-DD HH:mm:ss", true);
             assert(parsedDt.isValid() === true, 'ts not valid date');
             assert((new M() - parsedDt) >= 0, 'Date looks negative');
 
@@ -55,6 +55,28 @@ describe('All params except Message', function() {
             done();
         };
 
+        LOG.test('dont matter what goes here');
+
+    });
+
+
+    it("change tsformat", function(done) {
+
+        // output test
+        testStream.testcb = function(data){
+
+            // console.log(data);
+
+            var j = JSON.parse(data);
+
+            var parsedDt = M(j.ts, "x", true);
+            assert(parsedDt.isValid() === true, 'ts not valid date');
+            assert((new M() - parsedDt) >= 0, 'Date looks negative');
+
+            done();
+        };
+
+        LOG.updateTsFormat('x');
         LOG.test('dont matter what goes here');
 
     });
