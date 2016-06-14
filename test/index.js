@@ -117,15 +117,12 @@ describe('Testing all types of messages', function() {
         [[1, 2, 4], '[ 1, 2, 4 ]'],
 
         // functions
-        // [function(){}, 'function'],
-        // [Math.sin , 'function sin'],
-        // [function b(){ var i=0; i++; } , 'function sin'],
+        [function a(){}, '[Function: a]'],
+        [Math.sin , '[Function: sin]'],
+        [function b(){ var i=0; i++; } , '[Function: b]'],
 
         //regex
         [/s/, '/s/'],
-
-        // error object
-        // [new Error("Hi"), 'Error'],
 
     ];
 
@@ -150,6 +147,19 @@ describe('Testing all types of messages', function() {
             assert(result === true);
         }
         done();
+    });
+
+    it("Checking for Error type", function(done) {
+        testStream.testcb = function(data){
+            should.exist(data);
+
+            // should not be
+            data.should.not.equal('[Error: Hi]');
+
+            done();
+        };
+
+        LOG.test(new Error("Hi"));
     });
 
 });

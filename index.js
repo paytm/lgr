@@ -90,6 +90,7 @@ LGR.prototype._getInfoObj = function(level){
             "hostname"  : OS.hostname(),
         },
         callSiteObj;
+
     if(level.stackTrace) {
         callSiteObj = captureStack()[3];
         _.set(logFormatObject,"__FUNC__",callSiteObj.getFunctionName() || '(anon)');
@@ -123,10 +124,10 @@ LGR.prototype.getLevels = function() {
 
 LGR.prototype._checkStackTraceReqd = function(logFormat){
     if(
-        logFormat.indexOf('__FUNC__') >= -1 ||
-        logFormat.indexOf('__FILE__') >= -1 ||
-        logFormat.indexOf('__LINE__') >= -1 ||
-        logFormat.indexOf('__COLM__') >= -1
+        logFormat.indexOf('__FUNC__') > 0 ||
+        logFormat.indexOf('__FILE__') > 0 ||
+        logFormat.indexOf('__LINE__') > 0 ||
+        logFormat.indexOf('__COLM__') >= 0
     ) return true;
     else return false;
 };
@@ -198,7 +199,6 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
     }
 };
 
-
 /*
     Gets linear string for an argument
     if error and has stack then we take stack
@@ -206,24 +206,23 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
     if it is a function we do toString
 */
 LGR.prototype._getlinearMsg = function(arg) {
+
     var t = typeof arg;
 
-    // Specific type of error
-    if(t === 'string')   return V.toString(arg);
+
+    if(t === 'string')   return UTIL.format(arg);
     else if(t === 'function') {
 
         // tostring only gives back 'function' at times
         // using util.format here
         // return t.toString();
-        return UTIL.format(t);
+        return UTIL.format(arg);
     }
     else if(t === 'number') {
-        if(isNaN(arg)) return 'NaN';
-        return V.toString(arg);
+        return UTIL.format(arg);
     }
     else if(t === 'undefined') {
-        if (arg === undefined) return 'undefined';
-        else return V.toString(arg);
+        return UTIL.format(arg);
     }
 
     /*
@@ -240,7 +239,9 @@ LGR.prototype._getlinearMsg = function(arg) {
         // return JSON.stringify(arg.stack);
         // return UTIL.format(arg.stack);
     }
-
+    else if (t === 'boolean') {
+        return UTIL.format(arg);
+    }
     // no idea what is here
     else {
         try {
