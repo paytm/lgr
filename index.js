@@ -34,8 +34,8 @@ var
     DEFAULT_STREAM      = process.stdout,
     DEFAULT_WEIGHT      = 1000,
     DEFAULT_PREFIX      = 'INFO',
-    DEFAULT_STYLE       = {};
-
+    DEFAULT_STYLE       = {},
+    DEFAULT_TS_FORMAT   = 'YYYY-MM-DD HH:mm:ss';
 
 function LGR(opts) {
     var self = this;
@@ -82,8 +82,8 @@ function captureStack(){
 LGR.prototype._getInfoObj = function(level){
     var
         logFormatObject = {
-            "ram"       : JSON.stringify(process.memoryUsage()),
-            "ts"        : MOMENT().format("YYYY-MM-DD HH:mm:ss"),
+            "ram"       : UTIL.format(process.memoryUsage()),
+            "ts"        : MOMENT().format(level.tsFormat),
             "uptime"    : process.uptime(),
             "pid"       : process.pid,
             "count"     : this.count,
@@ -134,7 +134,7 @@ LGR.prototype._checkStackTraceReqd = function(logFormat){
 
 
 /* Levels */
-LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logFormat, stream){
+LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logFormat, stream, tsFormat){
     /*
         1. Lets just register the level
         We cant create streams or ansi cursors here
@@ -152,7 +152,7 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
     dispPrefix  = dispPrefix || DEFAULT_PREFIX;
     logFormat   = logFormat || DEFAULT_LOGFORMAT;
     stream      = stream || DEFAULT_STREAM; // If stream unspecified , then it is process.stdout
-
+    tsFormat    = tsFormat || DEFAULT_TS_FORMAT;
 
     // Lets parse logformat and see if we need capture stack which is the heavy part
     stackTrace = self._checkStackTraceReqd(logFormat);
@@ -166,6 +166,7 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
         'logFormat'     : logFormat,
         'logTemplate'   : _.template(logFormat),
         'stackTrace'    : stackTrace,
+        'tsFormat'      : tsFormat,
     };
 
     // Bind the function
@@ -184,7 +185,7 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
     /* weight, style, dispPrefix, logFormat, stream */
     var
         self = this,
-        opts = ['weight', 'style', 'dispPrefix', 'logFormat', 'stream'];
+        opts = ['weight', 'style', 'dispPrefix', 'logFormat', 'stream', 'tsFormat'];
 
     if(self.levels[levelName] === undefined) throw new Error('wrong level, see getlevels');
     if(opts.indexOf(prop) <=-1) throw new Error('wrong property');

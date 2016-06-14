@@ -29,6 +29,7 @@ For each log level name and priority are mandatory arguments.
  - Style ( default info style )
  - Stream ( default process.stdout)
  - LogFormat ( default )
+ - tsFormat (default YYYY-MM-DD HH:mm:ss)
 
 ```
 log.setLevel('verbose'); // set level 

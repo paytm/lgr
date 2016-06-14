@@ -21,7 +21,7 @@ describe('All params except Message', function() {
     });
 
     it("Add level", function(done) {
-        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>" ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream);
+        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>" ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream, 'x');
 
         done();
     });
@@ -35,15 +35,16 @@ describe('All params except Message', function() {
 
             var j = JSON.parse(data);
 
+
             j.prefix.should.equal('TEST!');
             j.hostname.should.equal(OS.hostname());
 
-            var parsedDt = M(j.ts, "YYYY-MM-DD HH:mm:ss", true);
-            parsedDt.isValid().should.equal(true);
-            assert((new M() - parsedDt) >= 0);
+            var parsedDt = M(j.ts, "x", true);
+            assert(parsedDt.isValid() === true, 'ts not valid date');
+            assert((new M() - parsedDt) >= 0, 'Date looks negative');
 
             j.should.have.property('uptime').which.is.a.Number();
-            // assert(j.uptime >= 0);
+            assert(j.uptime >= 0);
 
             j.count.should.equal(1);
             j.__FILE__.should.equal(PATH.join(__dirname, '../index.js'));
