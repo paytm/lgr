@@ -92,7 +92,7 @@ LGR.prototype._getInfoObj = function(level){
         callSiteObj;
 
     if(level.stackTrace) {
-        callSiteObj = captureStack()[3];
+        callSiteObj = captureStack()[4];
         _.set(logFormatObject,"__FUNC__",callSiteObj.getFunctionName() || '(anon)');
         _.set(logFormatObject,"__FILE__",callSiteObj.getFileName());
         _.set(logFormatObject,"__LINE__",callSiteObj.getLineNumber());
