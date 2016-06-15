@@ -201,55 +201,53 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
 };
 
 /*
-    Gets linear string for an argument
-    if error and has stack then we take stack
-    otherwise if it is an object or array we try to stringify it
-    if it is a function we do toString
+
+    - If error object is there we take argument.stack
+
+    - JSON.stringify doesnt handle Special things like NaN, circular dependencies very well
+    - JSON.stringify puts "" around each string
+    - util.ispect gives multiline output for objects whose print length > 60 chars
+
+    - We take this for granted then that huge objects take time to print and are problematic on production
+    - For multiline objects with \n , we again replace \n with empty string
+
+    - for various outputs we use Validator.toString() but utl.format is anyway better than that
+
+    - using infinite levels, depth and arraylength
+    Reference : http://stackoverflow.com/questions/10729276/how-can-i-get-the-full-object-in-node-js-console-log-rather-than-object
 */
 LGR.prototype._getlinearMsg = function(arg) {
+    var
+        t   = typeof arg,
+        res =   '';
 
-    var t = typeof arg;
+    if(
+        t === 'string' ||
+        t === 'function' ||
+        t === 'number' ||
+        t === 'undefined' ||
+        t === 'boolean'
+    )
+        res = UTIL.format(arg);
 
-
-    if(t === 'string')   return UTIL.format(arg);
-    else if(t === 'function') {
-
-        // tostring only gives back 'function' at times
-        // using util.format here
-        // return t.toString();
-        return UTIL.format(arg);
-    }
-    else if(t === 'number') {
-        return UTIL.format(arg);
-    }
-    else if(t === 'undefined') {
-        return UTIL.format(arg);
-    }
-
-    /*
-        Bug is json.stringify puts "" around each string
-
-        Using infinite util.inspect instead of e levels, as per http://stackoverflow.com/questions/10729276/how-can-i-get-the-full-object-in-node-js-console-log-rather-than-object
-    */
     else if (t === 'object' && (arg instanceof Error) && arg.stack) {
-        return UTIL.inspect(arg.stack, {showHidden: false, depth: null, maxArrayLength: null});
+        res = UTIL.inspect(arg.stack, {showHidden: false, depth: null, maxArrayLength: null});
         // return UTIL.format(arg.stack);
     }
     else if (t === 'object') {
-        return UTIL.inspect(arg, {showHidden: false, depth: null, maxArrayLength: null});
-        // return JSON.stringify(arg.stack);
-        // return UTIL.format(arg.stack);
+        res = UTIL.inspect(arg, {showHidden: false, depth: null, maxArrayLength: null});
     }
-    else if (t === 'boolean') {
-        return UTIL.format(arg);
-    }
+
     // no idea what is here
     else {
         try {
-            return UTIL.inspect(arg, {showHidden: false, depth: null, maxArrayLength: null});
-            // return UTIL.format(arg);
-        } catch(ex) { return 'cannot parse ' + V.toString(arg); }
+            res = UTIL.inspect(arg, {showHidden: false, depth: null, maxArrayLength: null});
+        } catch(ex) { res = 'cannot parse '; }
     }
+
+    // remove newlines and other wierd chars
+    res = res.replace(/(\n|\t|\r)/gi,'');
+    return res;
 };
 
 // main log writing code
