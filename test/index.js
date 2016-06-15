@@ -46,7 +46,7 @@ describe('All params except Message', function() {
             // assert(j.uptime >= 0);
 
             j.count.should.equal(1);
-            j.__FILE__.should.equal(PATH.join(__dirname, '../index.js'));
+            j.__FILE__.should.equal(__filename);
             j.__FUNC__.should.equal('(anon)');
             j.should.have.property('__LINE__').which.is.a.Number();
             j.should.have.property('__COLM__').which.is.a.Number();
@@ -171,6 +171,33 @@ describe('Testing all types of messages', function() {
         var a = {};
         a.b = a;
         LOG.test(a);
+    });
+});
+
+describe('Call Stack', function () {
+
+    var testStream = null;
+    before(function(done) {
+        testStream = require('./testStream.js');
+        done();
+    });
+
+    it('Has correct __FILE__ and __FUNC__', function (done) {
+        LOG.editLevel('critical', 'logFormat', '{"__FUNC__" : "<%= __FUNC__ %>", "__FILE__" : "<%= __FILE__ %>" }');
+        LOG.editLevel('critical', 'stream', testStream);
+
+        testStream.testcb = function (data) {
+            var j = JSON.parse(data);
+            j.__FUNC__.should.be.equal('existential');
+            j.__FILE__.should.be.equal(__filename);
+            done();
+        };
+
+        function existential() {
+            LOG.critical('Main aisa kyun hun?');
+        }
+
+        existential();
     });
 });
 
