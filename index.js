@@ -96,6 +96,7 @@ LGR.prototype._getInfoObj = function(level){
 LGR.prototype.setLevel = function(level) {
     if(this.levels[level] === undefined) throw new Error('unknown level ' + level);
     this.currentLevel = this.levels[level];
+    return this; // makes it chainable
 };
 
 LGR.prototype.getLevel = function() { return this.currentLevel.name; };
@@ -166,8 +167,11 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
         var a = new Array(arguments.length + 1);
         a[0] = levelName;
         for (var i = 0; i < arguments.length; i ++) a[i + 1] = arguments[i];
-        return this._writeLog.apply(this, arguments);
+        this._writeLog.apply(this, arguments);
+        return this;
     }.bind(this, levelName);
+
+    return this; // makes it chainable
 };
 
 
@@ -189,6 +193,7 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
         self.levels[levelName].stackTrace = self._checkStackTraceReqd(newVal);
         self.levels[levelName].logTemplate = _.template(newVal);
     }
+    return this; // makes it chainable
 };
 
 /*
@@ -280,6 +285,7 @@ LGR.prototype._writeLog = function (lvl) {
 // update timestamp for all levels
 LGR.prototype.updateTsFormat = function(tsFormat) {
     this._updatePropertyAllLevels('tsFormat', tsFormat);
+    return this; // makes it chainable
 };
 
 LGR.prototype._updatePropertyAllLevels = function(prop, newVal) {

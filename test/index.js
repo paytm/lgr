@@ -340,6 +340,31 @@ describe('Call Stack', function () {
     });
 });
 
+describe('test chainables', function () {
+
+    var testStream = null;
+    before(function(done) {
+        testStream = require('./testStream.js');
+        done();
+    });
+
+    it('test chainable', function (done) {
+         var i = 3;
+         var totaldata = '';
+        testStream.testcb = function (data) {
+            totaldata+=data;
+
+            if(--i === 0) {
+              totaldata.should.be.equal('part 1 chain\npart 2 chain\npart 3 chain\n');
+              done();
+            }
+        };
+
+        LOG.test('part 1 chain').test('part 2 chain').test('part 3 chain');
+    });
+});
+
+
 describe('Misc', function() {
 
     var testStream = null;
