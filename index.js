@@ -79,6 +79,7 @@ LGR.prototype._getInfoObj = function(level){
             "pid"       : process.pid,
             "count"     : this.count,
             "hostname"  : OS.hostname(),
+            "weight"    : level.weight
         },
         callSiteObj;
 

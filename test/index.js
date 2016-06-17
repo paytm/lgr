@@ -21,7 +21,7 @@ describe('All params except Message', function() {
     });
 
     it("Add level", function(done) {
-        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>", "pid" : <%= pid %> ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream);
+        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>","weight" : <%= weight %>, "pid" : <%= pid %> ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream);
 
         done();
     });
@@ -48,6 +48,9 @@ describe('All params except Message', function() {
 
             j.should.have.property('pid').which.is.a.Number();
             assert(j.pid >= 0);
+
+            // weight
+            j.weight.should.equal(6000);
 
             j.count.should.equal(1);
             j.__FILE__.should.equal(__filename);
