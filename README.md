@@ -65,7 +65,11 @@ log.editLevel('info', 'stream', someStream)
 Variables
  - prefix : info, error , etc. from log level
  - msg : The message that was passed to log
+
+
  - ram : will give memory usage from process.memoryusage
+    Note : Removing ram from default format, since there is a pending issue in nodejs which makes process.memoryusage leave zombie FDs
+
  - ts : current timestamp
  - uptime : uptime of process
  - pid : process id

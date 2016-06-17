@@ -17,20 +17,8 @@ var
 
     /* Project Files */
 
-    /* Global */
-    ADDITIONAL_VARS = {
-        'ram'       : {},
-        'ts'        : {},
-        'uptime'    : {},
-        'pid'       : {},
-        'count'     : {},
-        '__FUNC__'  : {},
-        '__FILE__'  : {},
-        '__LINE__'  : {},
-        '__COLM__'  : {},
-    },
 
-    DEFAULT_LOGFORMAT   = '<%= prefix %> <%= ts %> [<%= uptime %>] [<%= count %>] <%= msg %>',
+    DEFAULT_LOGFORMAT   = '<%= prefix %> <%= ts %> <%= pid %> [<%= uptime %>] [<%= count %>] <%= msg %>',
     DEFAULT_STREAM      = process.stdout,
     DEFAULT_WEIGHT      = 1000,
     DEFAULT_PREFIX      = 'INFO',
@@ -82,7 +70,10 @@ function captureStack(){
 LGR.prototype._getInfoObj = function(level){
     var
         logFormatObject = {
+            /* removing for now from standard format since there is a pending issue which
+                says process.memoryusage has problems */
             "ram"       : UTIL.format(process.memoryUsage()),
+
             "ts"        : MOMENT().format(level.tsFormat),
             "uptime"    : process.uptime(),
             "pid"       : process.pid,
@@ -318,7 +309,7 @@ LGR.prototype.basicSettings = function() {
     self.addLevel('warn', 4000, { fg: 'black', bg: 'yellow' }, 'WARN');
 
     self.addLevel('error', 5000, { fg: 'red', bg: 'black' }, 'ERR!', '<%= prefix %> <%=hostname%> <%= ts %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', process.stderr);
-    self.addLevel('critical', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'CRIT!', '<%= prefix %> <%= ts %> <%= ram %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', process.stderr);
+    self.addLevel('critical', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'CRIT!', '<%= prefix %> <%= ts %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', process.stderr);
 
     self.addLevel('silent', Infinity);
 
