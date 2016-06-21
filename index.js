@@ -12,6 +12,7 @@ var
     // NPMLOG              = require('npmlog'),
     MOMENT              = require('moment'),
     // ANSI                = require('ansi'),
+    GLTV                = require('get-lodash-template-vars'),
 
     /* NPM Paytm */
 
@@ -37,6 +38,43 @@ function LGR(opts) {
     this.currentLevel = null;
 
     this.basicSettings();
+
+    // set PID and other params
+    self.pid        = process.pid;
+    self.hostname   = OS.hostname();
+
+    this.__getformatobj = {
+        ram : function() {
+            /* removing for now from standard format since there is a pending issue which
+            says process.memoryusage has problems */
+            try { return UTIL.format(process.memoryUsage()); }
+            catch(ex) { return '-'; }
+        },
+
+        ts  : function(level) {
+            return MOMENT().format(level.tsFormat);
+        },
+
+        uptime : function() {
+            try { return process.uptime(); } catch(ex) { return '-'; }
+        },
+
+        pid : function() {
+            return self.pid;
+        },
+
+        count : function() {
+            return this.count;
+        },
+
+        hostname : function() {
+            return self.hostname;
+        },
+
+        weight  : function(level) {
+            return level.weight;
+        }
+    };
 }
 
 /*
@@ -66,23 +104,30 @@ function captureStack(){
     return stack;
 }
 
+
+
+
 /* returns the object according to demanded data */
 LGR.prototype._getInfoObj = function(level){
     var
-        logFormatObject = {
-            /* removing for now from standard format since there is a pending issue which
-                says process.memoryusage has problems */
-            "ram"       : UTIL.format(process.memoryUsage()),
+        self            = this,
+        logFormatObject = {},
+        callSiteObj     = null;
 
-            "ts"        : MOMENT().format(level.tsFormat),
-            "uptime"    : process.uptime(),
-            "pid"       : process.pid,
-            "count"     : this.count,
-            "hostname"  : OS.hostname(),
-            "weight"    : level.weight
-        },
-        callSiteObj;
+    // see what is required by the template and fill that only
+    for(var i=0; i<level.formatSplits.length; i++) {
+        var
+            f = level.formatSplits,
+            funcName = f[i];
 
+        if(self.__getformatobj.hasOwnProperty(funcName)) {
+            logFormatObject[f[i]] = self.__getformatobj[funcName].call(this, level);
+        } else { // So that template does not have an entry for which we do not hava a function
+            logFormatObject[f[i]] = '';
+        }
+    }
+
+    // overwrite stuff filled for stacktrace
     if(level.stackTrace) {
         callSiteObj = captureStack()[4];
         _.set(logFormatObject,"__FUNC__",callSiteObj.getFunctionName() || '(anon)');
@@ -150,6 +195,9 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
     // Lets parse logformat and see if we need capture stack which is the heavy part
     stackTrace = self._checkStackTraceReqd(logFormat);
 
+    // trace what is required in log template and we will use those params always
+    var logFormatSplits = GLTV(logFormat);
+
     self.levels[levelName] = {
         'name'          : levelName,
         'weight'        : weight,
@@ -158,6 +206,7 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
         'stream'        : stream,
         'logFormat'     : logFormat,
         'logTemplate'   : _.template(logFormat),
+        'formatSplits'  : logFormatSplits,
         'stackTrace'    : stackTrace,
         'tsFormat'      : tsFormat,
     };
@@ -168,11 +217,11 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
         var a = new Array(arguments.length + 1);
         a[0] = levelName;
         for (var i = 0; i < arguments.length; i ++) a[i + 1] = arguments[i];
-        this._writeLog.apply(this, arguments);
-        return this;
-    }.bind(this, levelName);
+        self._writeLog.apply(self, arguments);
+        return self;
+    }.bind(self, levelName);
 
-    return this; // makes it chainable
+    return self; // makes it chainable
 };
 
 
@@ -193,6 +242,7 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
     if(prop === 'logFormat') {
         self.levels[levelName].stackTrace = self._checkStackTraceReqd(newVal);
         self.levels[levelName].logTemplate = _.template(newVal);
+        self.levels[levelName].formatSplits = GLTV(newVal);
     }
     return this; // makes it chainable
 };
