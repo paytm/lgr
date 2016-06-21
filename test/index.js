@@ -447,3 +447,30 @@ describe('Misc', function() {
 });
 
 
+
+
+describe('Test variables which are not in format', function() {
+
+    var testStream = null;
+    before(function(done) {
+        testStream = require('./testStream.js');
+        done();
+    });
+
+    it("wrong variable", function(done) {
+        LOG.addLevel('test_wrong', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '<%= wrong_var %>', testStream);
+
+        testStream.testcb = function(data){
+
+            // console.log("data#",data,"#");
+
+            data.should.equal('-\n');
+
+            done();
+        };
+
+        LOG.test_wrong('dont matter what goes here');
+    });
+
+
+});

@@ -123,7 +123,7 @@ LGR.prototype._getInfoObj = function(level){
         if(self.__getformatobj.hasOwnProperty(funcName)) {
             logFormatObject[f[i]] = self.__getformatobj[funcName].call(this, level);
         } else { // So that template does not have an entry for which we do not hava a function
-            logFormatObject[f[i]] = '';
+            logFormatObject[f[i]] = '-';
         }
     }
 
