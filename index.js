@@ -7,7 +7,6 @@ var
     UTIL                = require('util'),
     /* NPM Third Party */
     _                   = require('lodash'),
-    V                   = require('validator'),
 
     // NPMLOG              = require('npmlog'),
     MOMENT              = require('moment'),
@@ -57,7 +56,7 @@ function LGR(opts) {
         },
 
         uptime : function() {
-            try { return process.uptime(); } catch(ex) { return '-'; }
+            try { return Math.round(process.uptime()); } catch(ex) { return '-'; }
         },
 
         pid : function() {
