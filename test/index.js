@@ -443,6 +443,15 @@ describe('Misc', function() {
         done();
     });
 
+     it("level name wrong", function(done) {
+        try {
+          LOG.addLevel('info', 2000);
+        } catch (ex) {
+          assert(ex.message, "name unacceptable. Either already there or is reserved name");
+          done();
+        }
+
+    });
 
 });
 
@@ -470,6 +479,79 @@ describe('Test variables which are not in format', function() {
         };
 
         LOG.test_wrong('dont matter what goes here');
+    });
+
+
+});
+
+
+
+describe('Static and dynamic variables', function() {
+
+    var testStream = null;
+    before(function(done) {
+        testStream = require('./testStream.js');
+        done();
+    });
+
+    it("static variables", function(done) {
+        LOG.addLevel('test_static', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '<%= var1 %>', testStream);
+        LOG.updateVars({ var1 : 'var1_val'});
+
+        testStream.testcb = function(data){
+
+            // console.log("data#",data,"#");
+
+            data.should.equal('var1_val\n');
+
+            done();
+        };
+
+        LOG.test_static('dont matter what goes here');
+    });
+
+    it("dynamic variables using", function(done) {
+        LOG.addLevel('test_dynamic', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '<%= var1 %> <%= msg %>', testStream);
+
+        testStream.testcb = function(data){
+
+            // console.log("data#",data,"#");
+
+            data.should.equal('var1_val testing\n');
+            done();
+        };
+
+        LOG.test_dynamic({_: true, 'var1': 'var1_val'},'testing');
+    });
+
+    it("Same variable everywhere, check precedence part 1", function(done) {
+        LOG.addLevel('test_mix', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '<%= pid %> <%= msg %>', testStream);
+        LOG.updateVars({ pid : '12345'});
+
+        testStream.testcb = function(data){
+
+            // console.log("data#",data,"#");
+
+            data.should.equal('12345 testing\n');
+            done();
+        };
+
+        LOG.test_mix('testing');
+    });
+
+    it("Same variable everywhere, check precedence part 2", function(done) {
+        LOG.addLevel('test_mix2', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '<%= pid %> <%= msg %>', testStream);
+        LOG.updateVars({ pid : '12345'});
+
+        testStream.testcb = function(data){
+
+            // console.log("data#",data,"#");
+
+            data.should.equal('override testing\n');
+            done();
+        };
+
+        LOG.test_mix2({_: true, 'pid': 'override'},'testing');
     });
 
 

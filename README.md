@@ -30,6 +30,7 @@ For each log level name and priority are mandatory arguments.
  - Stream ( default process.stdout)
  - LogFormat ( default )
  - tsFormat (default YYYY-MM-DD HH:mm:ss)
+ - vars : Fixed variables
 
 ```
 log.setLevel('verbose'); // set level 
@@ -82,12 +83,28 @@ Variables
  - __COLM__ : will invoke stacktrace and show column number.
 
 ```
-// and "__FUNC__", "__FILE__", "__LINE__", "__COLM__". C Forever. :D
-log.setLogFormat('<%= ts %> [<%= uptime %>] ');
+log.editLevel('info', 'logFormat', '<%= ts %> [<%= uptime %>] ')
 
-//you can also set log formats for specific log levels
-log.setLogFormat('info','<%= ts %>');
 ```
+
+## Variables
+Variables can be used in log formats. Some variables are system variables while others are user defined.
+
+There are 2 ways to write variables. 
+1. Statically supply variables for a all or some log levels which will be in all logs.
+2. Send variables as 1st argument of the log. The 1st argument should be object with a special key _ = true set. NOTE: The object wont be printed in log.
+```
+// will update static variables for all log levels
+log.updateVars('vars' , { var1 : 'var1'})
+
+// will update static variables for a single levels
+log.editLevel('vars' , { var1 : 'var1'})
+
+// send opts argument
+log.info({ 'var1' : 'var1', _ : true}, 'Test log');
+```
+
+NOTE : Order of variables writing : 1. system variables , 2. Static variables, 3. Dynamic variables. Hence if 1 variable like pid is specific in all 3, dynamic variable will have highest precedence
 
 ## Colors
  - Only Prefix colors can be user controlled.
@@ -104,13 +121,12 @@ log.updateTsFormat('YYYY-MM-DD HH:MM:SS.sss');
 
 NOTE : `updateTsFormat`  actually gets all levels and overwrite the timestamp for each level.
 
-## Features
-- Priority based log levels.
-- Streams can be tied to each level making it easier to redirect log anywhere.
-- User defined formatted logs with os specific and stack information.
+## child loggers
+Currently child loggers are implemented as flat level hierarchy. Where for a specific config we maintain a different level altogether
 
 ## Theory , design decisions
 - Decision to not incorporate file saving, logs in rabbitmq and to use streams instead comes from the learning of winston which incorporate transport system. this is designed to be leightweight and users must implement their own stream to make use of log outouts.
+- Decision to keep things sync for obvious ease of usage
 
 ## ToDo and improvements : See Github Issues
 

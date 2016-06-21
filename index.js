@@ -24,6 +24,7 @@ var
     DEFAULT_WEIGHT      = 1000,
     DEFAULT_PREFIX      = 'INFO',
     DEFAULT_STYLE       = {},
+    DEFAULT_VARS        = {},
     DEFAULT_TS_FORMAT   = 'YYYY-MM-DD HH:mm:ss';
 
 function LGR(opts) {
@@ -104,14 +105,10 @@ function captureStack(){
     return stack;
 }
 
-
-
-
 /* returns the object according to demanded data */
-LGR.prototype._getInfoObj = function(level){
+LGR.prototype._getInfoObj = function(level, logFormatObject){
     var
         self            = this,
-        logFormatObject = {},
         callSiteObj     = null;
 
     // see what is required by the template and fill that only
@@ -172,7 +169,8 @@ LGR.prototype._checkStackTraceReqd = function(logFormat){
 
 
 /* Levels */
-LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logFormat, stream, tsFormat){
+LGR.prototype.addLevel =
+    function(levelName, weight, style, dispPrefix, logFormat, stream, tsFormat, vars){
     /*
         1. Lets just register the level
         We cant create streams or ansi cursors here
@@ -185,12 +183,18 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
     if (!levelName ) throw new Error('name missing');
     if (!weight ) throw new Error('weight missing');
 
+    // check if level name can be kept
+
+    if(Object.keys(self).indexOf(levelName) > -1)
+        throw new Error('name unacceptable. Either already there or is reserved name');
+
     // Default fallback values
     style       = style || DEFAULT_STYLE;
     dispPrefix  = dispPrefix || DEFAULT_PREFIX;
     logFormat   = logFormat || DEFAULT_LOGFORMAT;
     stream      = stream || DEFAULT_STREAM; // If stream unspecified , then it is process.stdout
     tsFormat    = tsFormat || DEFAULT_TS_FORMAT;
+    vars        = vars || DEFAULT_VARS;
 
     // Lets parse logformat and see if we need capture stack which is the heavy part
     stackTrace = self._checkStackTraceReqd(logFormat);
@@ -209,6 +213,7 @@ LGR.prototype.addLevel = function(levelName, weight, style, dispPrefix, logForma
         'formatSplits'  : logFormatSplits,
         'stackTrace'    : stackTrace,
         'tsFormat'      : tsFormat,
+        'vars'          : vars,
     };
 
     // Bind the function
@@ -230,7 +235,7 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
     /* weight, style, dispPrefix, logFormat, stream */
     var
         self = this,
-        opts = ['weight', 'style', 'dispPrefix', 'logFormat', 'stream', 'tsFormat'];
+        opts = ['weight', 'style', 'dispPrefix', 'logFormat', 'stream', 'tsFormat', 'vars'];
 
     if(self.levels[levelName] === undefined) throw new Error('wrong level, see getlevels');
     if(opts.indexOf(prop) <=-1) throw new Error('wrong property');
@@ -302,8 +307,9 @@ LGR.prototype._writeLog = function (lvl) {
     var
         self        = this,
         logline     = '',
-        formatObj   = null,
+        formatObj   = {},
         finalLog    = null,
+        argStart    = 1,
         level       = self.levels[lvl];
 
     // increment count
@@ -312,17 +318,46 @@ LGR.prototype._writeLog = function (lvl) {
     // Don't do anything unless the log is less than the general log setting .
     if (level.weight < self.currentLevel.weight) return;
 
+    // Check if 1st argument is a special opts type arg or not
+    if(arguments.length >=1 &&
+        arguments[1] &&
+        typeof arguments[1] === "object" &&
+        arguments[1]._ === true
+    ) {
+        argStart = 2;
+    }
+
     // first lets concat all user sent args in a single line
-    for (var i = 1; i < arguments.length; i ++)
+    for (var i = argStart; i < arguments.length; i ++)
         logline = logline + self._getlinearMsg(arguments[i]) + ' ';
 
     // remove last Space if any
     logline = logline.slice(0, -1);
 
-    // format the log according to the format
-    formatObj = self._getInfoObj(level);
+
+    // Variable filling 1. System
+    self._getInfoObj(level, formatObj);
     formatObj.msg = logline;
     formatObj.prefix = level.dispPrefix;
+
+    // Variable fillign 2: Fill the format object with Static variables
+    var varKeys = Object.keys(level.vars);
+    for(var iv =0; iv < varKeys.length; iv++) {
+        formatObj[varKeys[iv]] = level.vars[varKeys[iv]];
+    }
+
+    // Variable filling 3 : Dynamic variables
+    if(argStart === 2) {
+        // delete _ key
+        var dynamicVars = arguments[1];
+        delete dynamicVars._;
+
+        // Fill the object with Dynamic variables
+        var dynKeys = Object.keys(dynamicVars);
+        for(var id =0; id < dynKeys.length; id++) {
+            formatObj[dynKeys[id]] = dynamicVars[dynKeys[id]];
+        }
+    }
 
     // final line that goes to the stream
     finalLog = level.logTemplate(formatObj);
@@ -336,6 +371,12 @@ LGR.prototype._writeLog = function (lvl) {
 // update timestamp for all levels
 LGR.prototype.updateTsFormat = function(tsFormat) {
     this._updatePropertyAllLevels('tsFormat', tsFormat);
+    return this; // makes it chainable
+};
+
+// update vars for all levels
+LGR.prototype.updateVars = function(vars) {
+    this._updatePropertyAllLevels('vars', vars);
     return this; // makes it chainable
 };
 
