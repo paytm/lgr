@@ -117,6 +117,7 @@ To change timeformat for all levels throughout
 ```
 log.updateTsFormat('YYYY-MM-DD HH:MM:SS.sss');
 
+// These formats are MOMENT JS supported. You can leave it '' to use ISO format.
 ```
 
 NOTE : `updateTsFormat`  actually gets all levels and overwrite the timestamp for each level.
