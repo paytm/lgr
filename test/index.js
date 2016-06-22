@@ -17,13 +17,32 @@ describe('All params except Message', function() {
     var testStream = null;
     before(function(done) {
         testStream = require('./testStream.js');
+        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!',
+                '{  \
+                    "prefix"     : "<%= prefix %>", \
+                    "hostname"   : "<%= hostname %>", \
+                    "ram"        : <%= ram %>, \
+                    "ts"         : "<%= ts %>", \
+                    "weight"     : <%= weight %>, \
+                    "pid"        : <%= pid %>, \
+                    "uptime"     : <%= uptime %>, \
+                    "count"      : <%= count %>, \
+                    "__FILE__"   : "<%= __FILE__ %>", \
+                    "__FUNC__"   : "<%= __FUNC__ %>", \
+                    "__LINE__"   : <%= __LINE__ %>, \
+                    "__COLM__"   : <%= __COLM__ %> \
+                }', testStream);
         done();
     });
 
     it("Add level", function(done) {
-        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>","weight" : <%= weight %>, "pid" : <%= pid %> ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream);
+        testStream.testcb = function(data) {
+            var levels = LOG.getLevels();
+            levels.should.have.property('test').which.is.equal(6000);
+            done();
+        };
 
-        done();
+        LOG.test(/* needed to trigger the testcb above */);
     });
 
     it("Checking all params", function(done) {
@@ -34,7 +53,6 @@ describe('All params except Message', function() {
             // console.log(data);
 
             var j = JSON.parse(data);
-
 
             j.prefix.should.equal('TEST!');
             j.hostname.should.equal(OS.hostname());
@@ -49,10 +67,19 @@ describe('All params except Message', function() {
             j.should.have.property('pid').which.is.a.Number();
             assert(j.pid >= 0);
 
+            j.ram.should.have.property('rss').which.is.a.Number();
+            assert(j.ram.rss >= 0);
+            j.ram.should.have.property('heapTotal').which.is.a.Number();
+            assert(j.ram.heapTotal >= 0);
+            j.ram.should.have.property('heapUsed').which.is.a.Number();
+            assert(j.ram.heapUsed >= 0);
+
             // weight
             j.weight.should.equal(6000);
 
-            j.count.should.equal(1);
+            // Depends on the sequence this unit test was triggered. Was -g used?
+            j.count.should.be.a.Number();
+
             j.__FILE__.should.equal(__filename);
             j.__FUNC__.should.equal('(anon)');
             j.should.have.property('__LINE__').which.is.a.Number();
@@ -95,6 +122,11 @@ describe('Testing all types of messages', function() {
     var testStream = null;
     before(function(done) {
         testStream = require('./testStream.js');
+        var levels = LOG.getLevels();
+        if (levels.test !== 6000) {
+            // Possible, if run as `mocha test -g 'Testing all types of messages'`
+            LOG.addLevel('test', 6000, {}, 'TEST!', '<%= msg %>', testStream);
+        }
         done();
     });
 
@@ -268,9 +300,9 @@ describe('Testing all types of messages', function() {
 
     ];
 
-    var output = [];
-
     it("Checking for static sets ", function(done) {
+        var output = [];
+
         testStream.testcb = function(data){
             output.push(data);
         };
@@ -343,11 +375,15 @@ describe('Call Stack', function () {
     });
 });
 
-describe('test chainables', function () {
+describe('Test chainables', function () {
 
     var testStream = null;
     before(function(done) {
         testStream = require('./testStream.js');
+        var levels = LOG.getLevels();
+        if (!levels.test) {
+            LOG.addLevel('test', 6000, {}, 'TEST!', '<%= msg %>', testStream);
+        }
         done();
     });
 
@@ -373,6 +409,9 @@ describe('Misc', function() {
     var testStream = null;
     before(function(done) {
         testStream = require('./testStream.js');
+        var levels = LOG.getLevels();
+        if (!levels.test)
+            LOG.addLevel('test', 6000, {}, 'TEST!', '', testStream);
         done();
     });
 
@@ -521,7 +560,7 @@ describe('Static and dynamic variables', function() {
             done();
         };
 
-        LOG.test_dynamic({_: true, 'var1': 'var1_val'},'testing');
+        LOG.test_dynamic({_frLgr: true, 'var1': 'var1_val'},'testing');
     });
 
     it("Same variable everywhere, check precedence part 1", function(done) {
@@ -551,7 +590,7 @@ describe('Static and dynamic variables', function() {
             done();
         };
 
-        LOG.test_mix2({_: true, 'pid': 'override'},'testing');
+        LOG.test_mix2({_frLgr: true, 'pid': 'override'},'testing');
     });
 
 

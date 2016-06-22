@@ -47,7 +47,7 @@ function LGR(opts) {
         ram : function() {
             /* removing for now from standard format since there is a pending issue which
             says process.memoryusage has problems */
-            try { return UTIL.format(process.memoryUsage()); }
+            try { return JSON.stringify(process.memoryUsage()); }
             catch(ex) { return '-'; }
         },
 
@@ -318,10 +318,11 @@ LGR.prototype._writeLog = function (lvl) {
     if (level.weight < self.currentLevel.weight) return;
 
     // Check if 1st argument is a special opts type arg or not
-    if(arguments.length >=1 &&
+    // We have already added our own a[0] (levelName), so check for length >= 2
+    if(arguments.length >= 2 &&
         arguments[1] &&
         typeof arguments[1] === "object" &&
-        arguments[1]._ === true
+        arguments[1]._frLgr === true
     ) {
         argStart = 2;
     }
@@ -349,7 +350,7 @@ LGR.prototype._writeLog = function (lvl) {
     if(argStart === 2) {
         // delete _ key
         var dynamicVars = arguments[1];
-        delete dynamicVars._;
+        delete dynamicVars._frLgr;
 
         // Fill the object with Dynamic variables
         var dynKeys = Object.keys(dynamicVars);
