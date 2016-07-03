@@ -23,7 +23,7 @@ describe('All params except Message', function() {
     it("Add level", function(done) {
         // allocating buffer of random size between 0(inclusive) to 10(inclusive) bytes
         // setting flush time interval of 100 ms
-        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>","weight" : <%= weight %>, "pid" : <%= pid %> ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream, Math.floor(Math.random()*10), 100);
+        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>","weight" : <%= weight %>, "pid" : <%= pid %> ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream, null, null, Math.floor(Math.random()*10), 100);
 
         done();
     });
