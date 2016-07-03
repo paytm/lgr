@@ -151,7 +151,6 @@ describe('Testing all types of messages', function() {
         [function a(){}, '[Function: a]'],
         [Math.sin , '[Function: sin]'],
         [function b(){ var i=0; i++; } , '[Function: b]'],
-        [Symbol('foo'),'Symbol(foo)'],
 
         //regex
         [/s/, '/s/'],
