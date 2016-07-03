@@ -21,7 +21,9 @@ describe('All params except Message', function() {
     });
 
     it("Add level", function(done) {
-        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>","weight" : <%= weight %>, "pid" : <%= pid %> ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream);
+        // allocating buffer of random size between 0(inclusive) to 10(inclusive) bytes
+        // setting flush time interval of 100 ms
+        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>","weight" : <%= weight %>, "pid" : <%= pid %> ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream, Math.floor(Math.random()*10), 100);
 
         done();
     });
@@ -149,6 +151,7 @@ describe('Testing all types of messages', function() {
         [function a(){}, '[Function: a]'],
         [Math.sin , '[Function: sin]'],
         [function b(){ var i=0; i++; } , '[Function: b]'],
+        [Symbol('foo'),'Symbol(foo)'],
 
         //regex
         [/s/, '/s/'],
@@ -268,27 +271,36 @@ describe('Testing all types of messages', function() {
 
     ];
 
-    var output = [];
+    var logOutput = '';
 
     it("Checking for static sets ", function(done) {
         testStream.testcb = function(data){
-            output.push(data);
+            logOutput += data;
         };
 
-        // firing logs
+        var expectedOutput = '';
+
         for(var iset = 0; iset < sets.length; iset ++) {
+    
+            expectedOutput += sets[iset][1] + '\n';
+    
+            // firing logs
             LOG.test(sets[iset][0]);
         }
 
-        // assert output 1 by 1
-        for(var icheck = 0; icheck < sets.length; icheck ++) {
-            LOG.test(sets[icheck][0]);
+        /*
+            setTimeout used in order to wait for buffer to 
+            flush automatically after certain interval.
+            This is necessary to detect logs which were fired last 
+            and would still be in buffer.
 
-            var result = _.isEqual(sets[icheck][1] + '\n', output[icheck]);
-            if(result === false) console.log("This is failing", icheck, sets[icheck][1], output[icheck]);
-            assert(result === true);
-        }
-        done();
+            Note: Time interval here should be >= Time interval set for flushing buffer.
+        */
+        setTimeout(function(){
+             assert.equal(logOutput, expectedOutput);
+             done();
+        },100);
+
     });
 
     it("Checking for Error type", function(done) {

@@ -17,6 +17,8 @@ var
 
     /* Project Files */
 
+    bufferedWrite       = require('./bufferedWrite'),
+
 
     DEFAULT_LOGFORMAT   = '<%= prefix %> <%= ts %> <%= pid %> [<%= uptime %>] [<%= count %>] <%= msg %>',
     DEFAULT_STREAM      = process.stdout,
@@ -24,7 +26,10 @@ var
     DEFAULT_PREFIX      = 'INFO',
     DEFAULT_STYLE       = {},
     DEFAULT_VARS        = {},
-    DEFAULT_TS_FORMAT   = 'YYYY-MM-DD HH:mm:ss';
+    DEFAULT_TS_FORMAT   = 'YYYY-MM-DD HH:mm:ss',
+    DEFAULT_BUFFER_SIZE         = 0,
+    DEFAULT_FLUSH_TIME_INTERVAL = 10;
+
 
 function LGR(opts) {
     var self = this;
@@ -36,6 +41,8 @@ function LGR(opts) {
 
     // currnetly set level
     this.currentLevel = null;
+
+    this.bufferedWrite = null;
 
     this.basicSettings();
 
@@ -169,7 +176,7 @@ LGR.prototype._checkStackTraceReqd = function(logFormat){
 
 /* Levels */
 LGR.prototype.addLevel =
-    function(levelName, weight, style, dispPrefix, logFormat, stream, tsFormat, vars){
+    function(levelName, weight, style, dispPrefix, logFormat, stream, tsFormat, vars, bufferSize, flushTimeInterval){
     /*
         1. Lets just register the level
         We cant create streams or ansi cursors here
@@ -188,12 +195,15 @@ LGR.prototype.addLevel =
         throw new Error('name unacceptable. Either already there or is reserved name');
 
     // Default fallback values
-    style       = style || DEFAULT_STYLE;
-    dispPrefix  = dispPrefix || DEFAULT_PREFIX;
-    logFormat   = logFormat || DEFAULT_LOGFORMAT;
-    stream      = stream || DEFAULT_STREAM; // If stream unspecified , then it is process.stdout
-    tsFormat    = tsFormat || DEFAULT_TS_FORMAT;
-    vars        = vars || DEFAULT_VARS;
+    style               = style || DEFAULT_STYLE;
+    dispPrefix          = dispPrefix || DEFAULT_PREFIX;
+    logFormat           = logFormat || DEFAULT_LOGFORMAT;
+    stream              = stream || DEFAULT_STREAM; // If stream unspecified , then it is process.stdout
+    tsFormat            = tsFormat || DEFAULT_TS_FORMAT;
+    vars                = vars || DEFAULT_VARS,
+    bufferSize          = bufferSize || DEFAULT_BUFFER_SIZE,
+    flushTimeInterval   = flushTimeInterval || DEFAULT_FLUSH_TIME_INTERVAL;
+
 
     // Lets parse logformat and see if we need capture stack which is the heavy part
     stackTrace = self._checkStackTraceReqd(logFormat);
@@ -214,6 +224,9 @@ LGR.prototype.addLevel =
         'tsFormat'      : tsFormat,
         'vars'          : vars,
     };
+
+    // initialize buffer with stream, buffer size and flush interval
+    self.bufferedWrite = new bufferedWrite(stream, bufferSize, flushTimeInterval);
 
     // Bind the function
     self[levelName] = function () {
@@ -364,7 +377,7 @@ LGR.prototype._writeLog = function (lvl) {
     // Add \n in the end after the formatting
     finalLog += '\n';
 
-    level.stream.write(finalLog);
+    self.bufferedWrite.write(finalLog);
 };
 
 // update timestamp for all levels
