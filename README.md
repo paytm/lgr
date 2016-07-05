@@ -52,7 +52,18 @@ Returns:
 */
 
 log.addLevel('wall', 3500); // Add custom levels
-log.addLevel('hell', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'hell!', '<%= prefix %> <%= ts %> <%= ram %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', process.stderr);
+log.addLevel('hell',                            // levelName         -> for convenience
+            6000,                               // weight
+            {  fg : 'red', 'bg' : 'yellow'  },  // style             -> for dev ansi
+            'hell!',                            // dispPrefix        -> prefix
+            '<%= prefix %> <%= ts %> <%= ram %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', 
+                                                // logFormat         -> lodash.template
+            process.stderr,                     // stream            -> any WritableStream
+            'X',                                // tsFormat          -> for MOMENT().format()
+            {},                                 // vars              -> for special variables
+            4096,                               // bufferSize        -> in bytes
+            1000                                // flushTimeInterval -> in msec
+);
 
 
 // Edit level setting : done by same function call
