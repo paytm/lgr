@@ -200,13 +200,13 @@ LGR.prototype.addLevel =
     logFormat           = logFormat || DEFAULT_LOGFORMAT;
     stream              = stream || DEFAULT_STREAM; // If stream unspecified , then it is process.stdout
     tsFormat            = tsFormat || DEFAULT_TS_FORMAT;
-    vars                = vars || DEFAULT_VARS,
-    bufferSize          = bufferSize || DEFAULT_BUFFER_SIZE,
+    vars                = vars || DEFAULT_VARS;
+    bufferSize          = bufferSize || DEFAULT_BUFFER_SIZE;
     flushTimeInterval   = flushTimeInterval || DEFAULT_FLUSH_TIME_INTERVAL;
 
 
     // Lets parse logformat and see if we need capture stack which is the heavy part
-    stackTrace = self._checkStackTraceReqd(logFormat);
+    stackTrace          = self._checkStackTraceReqd(logFormat);
 
     // trace what is required in log template and we will use those params always
     var logFormatSplits = GLTV(logFormat);
@@ -247,7 +247,7 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
     /* weight, style, dispPrefix, logFormat, stream */
     var
         self = this,
-        opts = ['weight', 'style', 'dispPrefix', 'logFormat', 'stream', 'tsFormat', 'vars'];
+        opts = ['weight', 'style', 'dispPrefix', 'logFormat', 'stream', 'tsFormat', 'vars', 'bufferSize', 'flushTimeInterval'];
 
     if(self.levels[levelName] === undefined) throw new Error('wrong level, see getlevels');
     if(opts.indexOf(prop) <=-1) throw new Error('wrong property');
