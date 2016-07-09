@@ -302,6 +302,39 @@ describe('Testing all types of messages', function() {
 
     });
 
+
+    it("Checking time based flushing of buffer ", function(done) {
+        // setting buffer size = 3 bytes
+        LOG.addLevel('testBuffer', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '<%= msg%>', testStream, null, null, 3, 500);
+
+        var 
+            smallOutput = '',
+            testString  = 's';
+
+        testStream.testcb = function(data){
+            smallOutput += data;
+        };
+
+        // firing log
+        LOG.testBuffer(testString);
+
+
+        // since size of buffer is 3 bytes and test string is 1 byte, output should not be written immediately
+        assert.equal(smallOutput, '');
+
+        /*
+            setTimeout used in order to wait for buffer to 
+            flush automatically after certain interval.
+            Note: Time interval here should be >= Time interval set for flushing buffer.
+        */
+        setTimeout(function(){
+             assert.equal(smallOutput, testString + '\n');
+             done();
+        },500);
+
+    });
+
+
     it("Checking for Error type", function(done) {
         testStream.testcb = function(data){
             should.exist(data);
@@ -449,7 +482,7 @@ describe('Misc', function() {
     it("get levels", function(done) {
 
         assert(LOG.getLevel() === 'info');
-        JSON.stringify(LOG.getLevels()).should.equal('{"silly":null,"verbose":1000,"info":2000,"log":2000,"http":3000,"warn":4000,"error":5000,"critical":6000,"silent":null,"test":6000}');
+        JSON.stringify(LOG.getLevels()).should.equal('{"silly":null,"verbose":1000,"info":2000,"log":2000,"http":3000,"warn":4000,"error":5000,"critical":6000,"silent":null,"test":6000,"testBuffer":6000}');
 
         done();
     });
