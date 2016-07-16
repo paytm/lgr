@@ -42,7 +42,6 @@ function LGR(opts) {
     // currnetly set level
     this.currentLevel = null;
 
-    this.bufferedWrite = null;
 
     this.basicSettings();
 
@@ -212,21 +211,23 @@ LGR.prototype.addLevel =
     var logFormatSplits = GLTV(logFormat);
 
     self.levels[levelName] = {
-        'name'          : levelName,
-        'weight'        : weight,
-        'style'         : style,
-        'dispPrefix'    : dispPrefix,
-        'stream'        : stream,
-        'logFormat'     : logFormat,
-        'logTemplate'   : _.template(logFormat),
-        'formatSplits'  : logFormatSplits,
-        'stackTrace'    : stackTrace,
-        'tsFormat'      : tsFormat,
-        'vars'          : vars,
+        'name'              : levelName,
+        'weight'            : weight,
+        'style'             : style,
+        'dispPrefix'        : dispPrefix,
+        'stream'            : stream,
+        'bufferSize'        : bufferSize,
+        'flushTimeInterval' : flushTimeInterval,
+        'logFormat'         : logFormat,
+        'logTemplate'       : _.template(logFormat),
+        'formatSplits'      : logFormatSplits,
+        'stackTrace'        : stackTrace,
+        'tsFormat'          : tsFormat,
+        'vars'              : vars,
     };
 
     // initialize buffer with stream, buffer size and flush interval
-    self.bufferedWrite = new bufferedWrite(stream, bufferSize, flushTimeInterval);
+    self.levels[levelName].bufferedWrite = new bufferedWrite(stream, bufferSize, flushTimeInterval);
 
     // Bind the function
     self[levelName] = function () {
@@ -246,20 +247,26 @@ LGR.prototype.addLevel =
 LGR.prototype.editLevel = function(levelName, prop, newVal) {
     /* weight, style, dispPrefix, logFormat, stream */
     var
-        self = this,
-        opts = ['weight', 'style', 'dispPrefix', 'logFormat', 'stream', 'tsFormat', 'vars', 'bufferSize', 'flushTimeInterval'];
+        self        =   this,
+        level       =   self.levels[levelName],
+        opts        =   ['weight', 'style', 'dispPrefix', 'logFormat', 'stream', 'tsFormat', 'vars', 'bufferSize', 'flushTimeInterval'];
 
-    if(self.levels[levelName] === undefined) throw new Error('wrong level, see getlevels');
+    if(level === undefined) throw new Error('wrong level, see getlevels');
     if(opts.indexOf(prop) <=-1) throw new Error('wrong property');
 
     //set property
-    self.levels[levelName][prop] = newVal;
+    level[prop] = newVal;
+
+    // reset bufferedWrite in case any buffer parameters are changed
+    if(['stream', 'bufferSize', 'flushTimeInterval'].indexOf(prop) >= 0) {
+        level.bufferedWrite = new bufferedWrite(level.stream, level.bufferSize, level.flushTimeInterval);
+    }
 
     // Lets parse logformat and see if we need capture stack which is the heavy part
     if(prop === 'logFormat') {
-        self.levels[levelName].stackTrace = self._checkStackTraceReqd(newVal);
-        self.levels[levelName].logTemplate = _.template(newVal);
-        self.levels[levelName].formatSplits = GLTV(newVal);
+        level.stackTrace = self._checkStackTraceReqd(newVal);
+        level.logTemplate = _.template(newVal);
+        level.formatSplits = GLTV(newVal);
     }
     return this; // makes it chainable
 };
@@ -377,7 +384,7 @@ LGR.prototype._writeLog = function (lvl) {
     // Add \n in the end after the formatting
     finalLog += '\n';
 
-    self.bufferedWrite.write(finalLog);
+    self.levels[lvl].bufferedWrite.write(finalLog);
 };
 
 // update timestamp for all levels
