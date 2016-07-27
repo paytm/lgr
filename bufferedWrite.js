@@ -18,10 +18,11 @@ function bufferedWrite(stream, bufferSize, flushTimeInterval) {
 	*/
 
 	this.timer 			= setTimeout(function(){
-		self.flushBuffer(null, stream);
+		self.callFlushBuffer(stream);
 	}, flushTimeInterval);
 
 }
+
 
 bufferedWrite.prototype.write = function(log) {
 	/*
@@ -53,6 +54,12 @@ bufferedWrite.prototype.write = function(log) {
 }
 
 
+bufferedWrite.prototype.callFlushBuffer = function(stream) {
+	var self = this;
+	self.flushBuffer(null, stream);
+}
+
+
 bufferedWrite.prototype.flushBuffer = function(log, stream) {
 
 	var self 	= this;
@@ -75,7 +82,7 @@ bufferedWrite.prototype.flushBuffer = function(log, stream) {
 	// reset time for flushing buffer again
 	clearTimeout(this.timer);
 	this.timer = setTimeout(function(){
-		self.flushBuffer(null, stream);
+		self.callFlushBuffer(null, stream);
 	}, this.flushTimeInterval);
 }
 
