@@ -17,11 +17,12 @@ function bufferedWrite(stream, bufferSize, flushTimeInterval) {
 		On call to flushBuffer, contents of buffer are written to stream and offset is reset to 0.
 	*/
 
-	setInterval(function(){
-		self.flushBuffer(null, stream);
+	this.timer 			= setTimeout(function(){
+		self.callFlushBuffer(stream);
 	}, flushTimeInterval);
 
 }
+
 
 bufferedWrite.prototype.write = function(log) {
 	/*
@@ -53,7 +54,17 @@ bufferedWrite.prototype.write = function(log) {
 }
 
 
+bufferedWrite.prototype.callFlushBuffer = function(stream) {
+	var self = this;
+	self.flushBuffer(null, stream);
+}
+
+
 bufferedWrite.prototype.flushBuffer = function(log, stream) {
+
+	var self 	= this;
+
+	
 	// check if buffer is empty, else write contents of buffer to output
 	if(this.offset !== 0) {
 		stream.write(this.buffer.toString(undefined, 0 , this.offset));
@@ -66,6 +77,13 @@ bufferedWrite.prototype.flushBuffer = function(log, stream) {
 
 	// offset is reset to 0 to enable writing to buffer from beginning
 	this.offset = 0;
+
+
+	// reset time for flushing buffer again
+	clearTimeout(this.timer);
+	this.timer = setTimeout(function(){
+		self.callFlushBuffer(null, stream);
+	}, this.flushTimeInterval);
 }
 
 module.exports = bufferedWrite;
