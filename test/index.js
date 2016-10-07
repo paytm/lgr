@@ -23,7 +23,19 @@ describe('All params except Message', function() {
     it("Add level", function(done) {
         // allocating buffer of random size between 0(inclusive) to 10(inclusive) bytes
         // setting flush time interval of 100 ms
-        LOG.addLevel('test', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>","weight" : <%= weight %>, "pid" : <%= pid %> ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }', testStream, null, null, Math.floor(Math.random()*10), 100);
+        LOG.addLevel(
+            'test',
+            6000,
+            {  fg : 'red', 'bg' : 'yellow'  },
+            'TEST!',
+            '{  "prefix" : "<%= prefix %>" ,"hostname" : "<%= hostname %>" ,"ts" : "<%= ts %>","weight" : <%= weight %>, "pid" : <%= pid %> ,"uptime" : <%= uptime %> ,"count" : <%= count %> ,"__FILE__" : "<%= __FILE__ %>" ,"__FUNC__" : "<%= __FUNC__ %>" ,"__LINE__" : <%= __LINE__ %> ,"__COLM__" : <%= __COLM__ %> }',
+            testStream,
+            null,
+            null,
+            false,
+            Math.floor(Math.random()*10),
+            100
+        );
 
         done();
     });
@@ -305,7 +317,19 @@ describe('Testing all types of messages', function() {
 
     it("Checking time based flushing of buffer ", function(done) {
         // setting buffer size = 3 bytes
-        LOG.addLevel('testBuffer', 6000, {  fg : 'red', 'bg' : 'yellow'  }, 'TEST!', '<%= msg%>', testStream, null, null, 3, 500);
+        LOG.addLevel(
+            'testBuffer',
+            6000,
+            {  fg : 'red', 'bg' : 'yellow'  },
+            'TEST!',
+            '<%= msg%>',
+            testStream,
+            null,
+            null,
+            true,
+            3,
+            500
+        );
 
         var 
             smallOutput = '',
@@ -334,6 +358,58 @@ describe('Testing all types of messages', function() {
 
     });
 
+
+
+    it("Checking heavy log flushing of buffer ", function(done) {
+        // setting buffer size = 3 bytes
+
+        var 
+            testString  = '1234567';
+
+        testStream.testcb = function(data){
+
+            // since size of buffer is 3 bytes and test string is 1 byte, output should not be written immediately
+            assert.equal(data, '1234567\n');
+            done()
+        };
+
+        // firing log
+        LOG.testBuffer(testString);
+
+    });
+
+
+    it("Checking multiple small log flushing of buffer ", function(done) {
+        // setting buffer size = 3 bytes
+
+        var 
+            smallOutput = '',
+            testint  = 0;
+
+        testStream.testcb = function(data){
+            smallOutput += data;
+        };
+
+        // firing log 5 times
+        LOG.testBuffer(testint++);
+        LOG.testBuffer(testint++);
+        LOG.testBuffer(testint++);
+        LOG.testBuffer(testint++);
+        LOG.testBuffer(testint++);
+
+
+        // checking buffer 1
+        setTimeout(function(){
+             assert.equal(smallOutput, '0\n1\n2\n3\n', "First flush");
+        },100);
+
+        // checking buffer 2
+        setTimeout(function(){
+             assert.equal(smallOutput, '0\n1\n2\n3\n4\n', "second flush");
+             done();
+        },700);
+
+    });
 
     it("Checking for Error type", function(done) {
         testStream.testcb = function(data){

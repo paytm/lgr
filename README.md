@@ -52,17 +52,40 @@ Returns:
 */
 
 log.addLevel('wall', 3500); // Add custom levels
-log.addLevel('hell',                            // levelName         -> for convenience
-            6000,                               // weight
-            {  fg : 'red', 'bg' : 'yellow'  },  // style             -> for dev ansi
-            'hell!',                            // dispPrefix        -> prefix
-            '<%= prefix %> <%= ts %> <%= ram %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>', 
-                                                // logFormat         -> lodash.template
-            process.stderr,                     // stream            -> any WritableStream
-            'X',                                // tsFormat          -> for MOMENT().format()
-            {},                                 // vars              -> for special variables
-            4096,                               // bufferSize        -> in bytes
-            1000                                // flushTimeInterval -> in msec
+log.addLevel(
+
+  // levelName
+  'hell',
+
+  // weight
+  6000,
+
+  // style
+  {  fg : 'red', 'bg' : 'yellow'  },
+
+  // Prefix of each log entry
+  'hell!',
+
+  // logFormat ( lodash template)
+  '<%= prefix %> <%= ts %> <%= ram %> [<%= uptime %>] [<%= count %>] <%= __FILE__ %>:<%= __FUNC__ %>:<%= __LINE__ %>:<%= __COLM__ %> <%= msg %>',
+
+  // stream ( writeable)
+  process.stderr,
+
+  // timestamp format ( moment Js )
+ 'X',
+ 
+  // custom vairalbes to be used in logformat
+  {},
+
+  // async buffered output ( default false)
+  true,
+
+  // buffer sizes for async buffered writing ( bytes )
+  4096,
+
+  // flush time (ms)
+  1000
 );
 
 
@@ -72,6 +95,12 @@ log.addLevel('hell',                            // levelName         -> for conv
 log.editLevel('info', 'stream', someStream)
 
 ```
+
+
+### Async logs
+Buffer size can be specified in add/edit Level. If logs spill buffer then buffer is immediately flushed to stream and new logs start to make their way in buffer.
+Flush Interval time keeps a timer on buffer in case of slow filling buffers. If time expires then bufer is flushed, full or not.
+
 
 ### log Formats
 Variables

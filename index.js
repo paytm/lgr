@@ -17,9 +17,6 @@ var
 
     /* Project Files */
 
-    bufferedWrite       = require('./bufferedWrite'),
-
-
     DEFAULT_LOGFORMAT   = '<%= prefix %> <%= ts %> <%= pid %> [<%= uptime %>] [<%= count %>] <%= msg %>',
     DEFAULT_STREAM      = process.stdout,
     DEFAULT_WEIGHT      = 1000,
@@ -27,6 +24,9 @@ var
     DEFAULT_STYLE       = {},
     DEFAULT_VARS        = {},
     DEFAULT_TS_FORMAT   = 'YYYY-MM-DD HH:mm:ss',
+
+    // Buffered write
+    DEFAULT_ASYNC_WRITE          = false,
     DEFAULT_BUFFER_SIZE         = 0,
     DEFAULT_FLUSH_TIME_INTERVAL = 10;
 
@@ -41,7 +41,6 @@ function LGR(opts) {
 
     // currnetly set level
     this.currentLevel = null;
-
 
     this.basicSettings();
 
@@ -173,9 +172,23 @@ LGR.prototype._checkStackTraceReqd = function(logFormat){
 };
 
 
+/* set async buffer */
+LGR.prototype._bufferSetup = function(lvl) {
+    var
+        self    = this,
+        level   = self.levels[lvl];
+
+    self.levels[lvl].b = {
+        'offset'            : 0,
+        'buffer'            : new Buffer(level.bufferSize),
+        'timer'             : setTimeout(self._flushBuffer.bind(self, lvl, "timer"), level.flushTimeInterval),
+    };
+
+}
+
 /* Levels */
 LGR.prototype.addLevel =
-    function(levelName, weight, style, dispPrefix, logFormat, stream, tsFormat, vars, bufferSize, flushTimeInterval){
+    function(levelName, weight, style, dispPrefix, logFormat, stream, tsFormat, vars, asyncWrite, bufferSize, flushTimeInterval) {
     /*
         1. Lets just register the level
         We cant create streams or ansi cursors here
@@ -200,6 +213,9 @@ LGR.prototype.addLevel =
     stream              = stream || DEFAULT_STREAM; // If stream unspecified , then it is process.stdout
     tsFormat            = tsFormat || DEFAULT_TS_FORMAT;
     vars                = vars || DEFAULT_VARS;
+    
+    // for buffered write in streams
+    asyncWrite          = asyncWrite || DEFAULT_ASYNC_WRITE;
     bufferSize          = bufferSize || DEFAULT_BUFFER_SIZE;
     flushTimeInterval   = flushTimeInterval || DEFAULT_FLUSH_TIME_INTERVAL;
 
@@ -216,18 +232,22 @@ LGR.prototype.addLevel =
         'style'             : style,
         'dispPrefix'        : dispPrefix,
         'stream'            : stream,
-        'bufferSize'        : bufferSize,
-        'flushTimeInterval' : flushTimeInterval,
         'logFormat'         : logFormat,
         'logTemplate'       : _.template(logFormat),
         'formatSplits'      : logFormatSplits,
         'stackTrace'        : stackTrace,
         'tsFormat'          : tsFormat,
         'vars'              : vars,
+
+        'asyncWrite'        : asyncWrite,
+        'bufferSize'        : bufferSize, 
+        'flushTimeInterval' : flushTimeInterval,
     };
 
-    // initialize buffer with stream, buffer size and flush interval
-    self.levels[levelName].bufferedWrite = new bufferedWrite(stream, bufferSize, flushTimeInterval);
+    // check buffer
+    if(asyncWrite) {
+        self._bufferSetup(levelName);
+    }
 
     // Bind the function
     self[levelName] = function () {
@@ -249,7 +269,7 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
     var
         self        =   this,
         level       =   self.levels[levelName],
-        opts        =   ['weight', 'style', 'dispPrefix', 'logFormat', 'stream', 'tsFormat', 'vars', 'bufferSize', 'flushTimeInterval'];
+        opts        =   ['weight', 'style', 'dispPrefix', 'logFormat', 'stream', 'tsFormat', 'vars', 'asyncWrite', 'bufferSize', 'flushTimeInterval'];
 
     if(level === undefined) throw new Error('wrong level, see getlevels');
     if(opts.indexOf(prop) <=-1) throw new Error('wrong property');
@@ -258,8 +278,8 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
     level[prop] = newVal;
 
     // reset bufferedWrite in case any buffer parameters are changed
-    if(['stream', 'bufferSize', 'flushTimeInterval'].indexOf(prop) >= 0) {
-        level.bufferedWrite = new bufferedWrite(level.stream, level.bufferSize, level.flushTimeInterval);
+    if(['bufferSize', 'flushTimeInterval'].indexOf(prop) >= 0) {
+        self._bufferSetup(levelName);
     }
 
     // Lets parse logformat and see if we need capture stack which is the heavy part
@@ -268,6 +288,8 @@ LGR.prototype.editLevel = function(levelName, prop, newVal) {
         level.logTemplate = _.template(newVal);
         level.formatSplits = GLTV(newVal);
     }
+            
+
     return this; // makes it chainable
 };
 
@@ -384,8 +406,85 @@ LGR.prototype._writeLog = function (lvl) {
     // Add \n in the end after the formatting
     finalLog += '\n';
 
-    self.levels[lvl].bufferedWrite.write(finalLog);
+    self.__writeBuffered(lvl, finalLog)    
 };
+
+// Check if Sync Write or Async Write
+LGR.prototype.__writeBuffered = function(lvl, log) {
+
+    var
+        self    = this,
+        level   = self.levels[lvl],
+
+        // calculate size of incoming log
+        logSize     = Buffer.byteLength(log);
+
+
+    // Write in Sync Mode if Log Size is greater than buffer or Log is in Sync Mode
+    if(level.asyncWrite && logSize < level.bufferSize) { 
+
+        /*
+            There is no direct way in node to detect size of data filled in buffer.
+            buffer.write(string, offset) returns number of bytes it writes to buffer, say x.
+            Cumulative addition of x gives the number of bytes written to buffer so far, say y.
+            When buffer is unable to accomodate any more logs(i.e. when (buffer.length - y) < sizeof incoming log),
+            buffer is flushed and offset is reset to 0.
+        */
+
+    
+        var
+            // calculate empty space in buffer
+            emptySpace  = level.b.buffer.length - level.b.offset;
+
+        // check if there is enough empty space to buffer the log
+        if(emptySpace <  logSize) {
+            self._flushBuffer(lvl);
+
+            // call itself once again to write the log
+            // NOTE: Return is important here since it declares that nothing more to be done here
+            return self.__writeBuffered(lvl, log);
+        }
+        else {
+            // write log in buffer
+            var bytesWritten = level.b.buffer.write(log, level.b.offset);
+
+            // set offset : offset gives the number of bytes written to buffer so far
+            level.b.offset += bytesWritten;    
+
+            // set timer if not already set
+            if(level.b.timer == null) {
+                level.b.timer = setTimeout(self._flushBuffer.bind(self, lvl, "timer"), level.flushTimeInterval);
+            }
+        }
+    } else { // sync writing 
+        level.stream.write(log);
+    }
+
+    return ;
+};
+
+// flushes the buffer on stream
+LGR.prototype._flushBuffer = function(lvl, source) {
+    var
+        self    = this,
+        level   = self.levels[lvl];
+
+    // Check if there is anything to flush
+    if(level.b.offset !== 0) {
+
+        // write buffer to stream
+        level.stream.write(level.b.buffer.toString(undefined, 0 , level.b.offset));
+
+        // offset is reset to 0 to enable writing to buffer from beginning
+        // NOTE : No need to reinitialize buffer with empty string
+        level.b.offset = 0;
+    }
+
+    // reset time always for flushing buffer again
+    clearTimeout(level.b.timer);
+    level.b.timer = null;
+
+}
 
 // update timestamp for all levels
 LGR.prototype.updateTsFormat = function(tsFormat) {
