@@ -578,7 +578,7 @@ describe('Misc', function() {
     it("get levels", function(done) {
 
         assert(LOG.getLevel() === 'info');
-        JSON.stringify(LOG.getLevels()).should.equal('{"silly":null,"verbose":1000,"info":2000,"log":2000,"http":3000,"warn":4000,"error":5000,"critical":6000,"silent":null,"test":6000,"testBuffer":6000}');
+        JSON.stringify(LOG.getLevels()).should.equal('{"silly":null,"doc":500,"verbose":1000,"info":2000,"log":2000,"http":3000,"warn":4000,"error":5000,"critical":6000,"silent":null,"test":6000,"testBuffer":6000}');
 
         done();
     });

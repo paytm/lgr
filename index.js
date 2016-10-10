@@ -525,6 +525,17 @@ LGR.prototype.basicSettings = function() {
     // log.headingStyle = { fg: 'white', bg: 'black' }
 
     self.addLevel('silly', -Infinity, { inverse: true }, 'SILL');
+
+    // adding logging level for document
+    self.addLevel(
+          'doc',
+          500,
+          {},
+          'DOC',
+          ' * [code](<%= __SHORTFILENAME__ %>:<%= __FUNC__ %>:<%= __LINE__ %>) <%= msg %>'
+    );
+
+
     self.addLevel('verbose', 1000, { fg: 'blue', bg: 'black' }, 'VERB');
     self.addLevel('info', 2000, { fg: 'green' }, 'INFO');
     self.addLevel('log', 2000, { fg: 'green' }, 'INFO');
