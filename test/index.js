@@ -444,6 +444,25 @@ describe('Call Stack', function () {
         done();
     });
 
+
+
+    it('Has correct __SHORTFILENAME__', function (done) {
+        LOG.editLevel('critical', 'logFormat', '{"__SHORTFILENAME__" : "<%= __SHORTFILENAME__ %>"}');
+        LOG.editLevel('critical', 'stream', testStream);
+
+        testStream.testcb = function (data) {
+            var j = JSON.parse(data);
+            j.__SHORTFILENAME__.should.be.equal("index.js");
+            done();
+        };
+
+        function existential() {
+            LOG.critical('TEST SHOTFILENAME');
+        }
+
+        existential();
+    });
+
     it('Has correct __FILE__ and __FUNC__', function (done) {
         LOG.editLevel('critical', 'logFormat', '{"__FUNC__" : "<%= __FUNC__ %>", "__FILE__" : "<%= __FILE__ %>" }');
         LOG.editLevel('critical', 'stream', testStream);
@@ -452,6 +471,7 @@ describe('Call Stack', function () {
             var j = JSON.parse(data);
             j.__FUNC__.should.be.equal('existential');
             j.__FILE__.should.be.equal(__filename);
+
             done();
         };
 

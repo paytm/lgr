@@ -5,6 +5,7 @@ var
 
     OS                  = require('os'),
     UTIL                = require('util'),
+    PATH                = require('path'),
     /* NPM Third Party */
     _                   = require('lodash'),
 
@@ -133,6 +134,11 @@ LGR.prototype._getInfoObj = function(level, logFormatObject){
         callSiteObj = captureStack()[4];
         _.set(logFormatObject,"__FUNC__",callSiteObj.getFunctionName() || '(anon)');
         _.set(logFormatObject,"__FILE__",callSiteObj.getFileName());
+
+        try {
+            _.set(logFormatObject,"__SHORTFILENAME__",PATH.basename(callSiteObj.getFileName()));
+        } catch(ex) {}
+
         _.set(logFormatObject,"__LINE__",callSiteObj.getLineNumber());
         _.set(logFormatObject,"__COLM__",callSiteObj.getColumnNumber());
     }
@@ -165,6 +171,7 @@ LGR.prototype._checkStackTraceReqd = function(logFormat){
     if(
         logFormat.indexOf('__FUNC__') > 0 ||
         logFormat.indexOf('__FILE__') > 0 ||
+        logFormat.indexOf('__SHORTFILENAME__') > 0 ||
         logFormat.indexOf('__LINE__') > 0 ||
         logFormat.indexOf('__COLM__') >= 0
     ) return true;

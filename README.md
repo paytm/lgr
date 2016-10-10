@@ -118,7 +118,8 @@ Variables
  - hostname : system hostname
  - weight : Log level weight
  - __FUNC__ : will invoke stacktrace and last visited function of code
- - __FILE__ : will invoke stacktrace and last visited file at this log
+ - __FILE__ : will invoke stacktrace and last visited file at this log . This is absolute filename(full).
+ - __SHORTFILENAME__ : will return the last part of the filename ( with extension )
  - __LINE__ : will invoke stacktrace and last visited line at this log
  - __COLM__ : will invoke stacktrace and show column number.
 
